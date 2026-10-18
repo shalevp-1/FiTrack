@@ -1,0 +1,27 @@
+<header class="site-header" [class.nav-hidden]="isNavHidden" [class.nav-scrolled]="isNavScrolled && !isNavHidden">
+  <nav class="navbar" [class.photo-nav]="isPhotoRoute">
+    <div class="nav-links">
+      <a routerLink="/home" routerLinkActive="active-link">Home</a>
+      <a routerLink="/products" routerLinkActive="active-link">Products</a>
+
+
+      <a routerLink="/contactus" routerLinkActive="active-link">Contact</a>
+
+      <ng-container *ngIf="!isLoggedIn">
+        <a routerLink="/login" routerLinkActive="active-link">Login</a>
+        <a routerLink="/register" routerLinkActive="active-link" class="nav-cta">Get started</a>
+      </ng-container>
+
+      <ng-container *ngIf="isLoggedIn">
+        <a routerLink="/dashboard" routerLinkActive="active-link">Dashboard</a>
+        <a routerLink="/workouts" routerLinkActive="active-link">Workouts</a>
+        <a *ngIf="isAdmin" routerLink="/admin" routerLinkActive="active-link">
+          Admin
+        </a>
+        <a routerLink="/home" (click)="logout()">Logout</a>
+      </ng-container>
+    </div>
+  </nav>
+</header>
+
+<router-outlet></router-outlet>

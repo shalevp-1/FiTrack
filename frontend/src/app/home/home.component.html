@@ -1,0 +1,32 @@
+<section class="home home-reveal" #homeReveal>
+  <div class="home-content">
+    <h1>Build strength.<br>Track progress.<br>Keep moving.</h1>
+
+    <p class="home-text">
+      Track your workouts, running, and progress in one place.
+      Stay consistent and see how far you've come.
+    </p>
+
+    <div class="home-buttons">
+      <ng-container *ngIf="!isLoggedIn">
+        <a routerLink="/register" class="button primary-button">Get Started</a>
+        <a routerLink="/login" class="button secondary-button">Login</a>
+      </ng-container>
+      <ng-container *ngIf="isLoggedIn">
+        <a routerLink="/dashboard" class="button primary-button">Go to Dashboard</a>
+      </ng-container>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="features-title home-reveal" #homeReveal>
+    <p class="features-label">EVERYTHING IN ONE PLACE</p>
+    <h2>Train. Track. Improve.</h2>
+  </div>
+</section>
+
+<section class="home-bottom home-reveal" #homeReveal>
+  <h2>Your progress starts with the next workout.</h2>
+  <a routerLink="/register" class="button primary-button">Create Your Account</a>
+</section>

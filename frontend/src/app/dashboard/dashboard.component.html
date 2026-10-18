@@ -1,0 +1,172 @@
+<main class="dashboard-page">
+  <section class="dashboard-hero" aria-labelledby="dashboard-title">
+    <div class="hero-shade"></div>
+    <div class="hero-layout">
+      <div class="hero-copy">
+        <h1 id="dashboard-title">Progress looks good on you.</h1>
+        <p>Every run, every rep, every session adds up. Here’s your training at a glance.</p>
+        <a routerLink="/workouts" class="primary-link">＋ &nbsp; Log a workout</a>
+      </div>
+
+      <section class="chart-panel overview-panel" aria-labelledby="activity-title">
+        <div class="chart-heading">
+          <div>
+            <p class="eyebrow">YOUR SUMMARY</p>
+            <h2 id="activity-title">{{ periodTitle }}</h2>
+          </div>
+          <div class="period-switch" role="group" aria-label="Activity chart time range">
+            <button
+              *ngFor="let period of periodOptions"
+              type="button"
+              [class.active]="selectedPeriod === period.value"
+              [attr.aria-pressed]="selectedPeriod === period.value"
+              (click)="setPeriod(period.value)">
+              {{ period.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="overview-metrics">
+          <div><strong>{{ periodTotalWorkouts }}</strong><span>workouts</span></div>
+          <div><strong>{{ formatDuration(periodTotalMinutes) }}</strong><span>time trained</span></div>
+          <div><strong>{{ periodDistanceKm | number:'1.0-1' }} km</strong><span>distance</span></div>
+        </div>
+
+        <div
+          class="activity-chart"
+          [class.hourly-chart]="selectedPeriod === 'daily'"
+          [class.monthly-chart]="selectedPeriod === 'monthly'"
+          [class.yearly-chart]="selectedPeriod === 'yearly'"
+          [style.--chart-columns]="activityChart.length"
+          role="img"
+          [attr.aria-label]="periodTitle + ': ' + periodTotalMinutes + ' training minutes across ' + periodTotalWorkouts + ' workouts.'">
+          <div *ngFor="let bucket of activityChart" class="chart-column">
+            <span class="bar-value">{{ bucket.minutes ? formatChartDuration(bucket.minutes) : '' }}</span>
+            <div class="bar-track">
+              <div
+                class="bar-fill"
+                [class.has-activity]="bucket.minutes > 0"
+                [style.height.%]="bucket.height"
+                [title]="bucket.minutes + ' minutes, ' + bucket.count + (bucket.count === 1 ? ' workout' : ' workouts')">
+                <span class="bar-segment running-segment" [style.height.%]="bucket.minutes ? bucket.runningMinutes / bucket.minutes * 100 : 0"></span>
+                <span class="bar-segment strength-segment" [style.height.%]="bucket.minutes ? bucket.strengthMinutes / bucket.minutes * 100 : 0"></span>
+              </div>
+            </div>
+            <span class="axis-label">{{ bucket.label }}</span>
+          </div>
+        </div>
+        <p class="chart-caption">Training minutes · {{ periodTitle.toLowerCase() }}</p>
+      </section>
+    </div>
+  </section>
+
+  <div *ngIf="isLoading" class="state-card">Loading your workout summary...</div>
+  <div *ngIf="errorMessage && !isLoading" class="state-card error-card">{{ errorMessage }}</div>
+
+  <ng-container *ngIf="!isLoading && !errorMessage">
+    <div *ngIf="totalWorkouts === 0" class="empty-dashboard-state">
+      <p>Log a run or strength session to see your training trends and milestones.</p>
+      <a routerLink="/workouts" class="primary-link">Create your first workout</a>
+    </div>
+
+    <ng-container *ngIf="totalWorkouts > 0">
+      <div class="breakdown-heading scroll-reveal" #scrollReveal id="training-breakdown">
+        <h2>Your training, broken down.</h2>
+      </div>
+
+      <section class="discipline-section running-summary scroll-reveal" #scrollReveal aria-labelledby="running-title">
+        <div class="discipline-shade"></div>
+        <div class="discipline-content">
+          <h2 id="running-title">Running</h2>
+          <p class="discipline-description">One step at a time, you’re building endurance and going further.</p>
+          <div class="discipline-metrics">
+            <div><strong>{{ runningWorkouts.length }}</strong><span>all-time sessions</span></div>
+            <div><strong>{{ totalDistanceKm | number:'1.0-2' }} km</strong><span>all-time distance</span></div>
+            <div><strong>{{ formatDuration(totalRunningMinutes) }}</strong><span>all-time time running</span></div>
+            <div class="longest-run-metric">
+              <strong>{{ longestRun ? (longestRun.running!.distance_km | number:'1.0-2') + ' km' : '—' }}</strong>
+              <span>longest run · {{ formatPace(longestRun?.running?.avg_pace_seconds_per_km) }}/km</span>
+            </div>
+          </div>
+          <a routerLink="/workouts" class="text-link">View your workouts <span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+
+      <section class="discipline-section strength-summary scroll-reveal" #scrollReveal aria-labelledby="strength-title">
+        <div class="discipline-shade"></div>
+        <div class="discipline-content">
+          <h2 id="strength-title">Strength</h2>
+          <p class="discipline-description">Showing up consistently is how strength gets made.</p>
+          <div class="discipline-metrics">
+            <div><strong>{{ strengthWorkouts.length }}</strong><span>all-time sessions</span></div>
+            <div><strong>{{ totalSets }}</strong><span>all-time sets completed</span></div>
+            <div><strong>{{ formatDuration(totalStrengthMinutes) }}</strong><span>all-time time training</span></div>
+          </div>
+          <a routerLink="/workouts" class="text-link">View your workouts <span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+
+      <section class="activity-mix-panel scroll-reveal" #scrollReveal aria-labelledby="activity-mix-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">YOUR BALANCE</p>
+            <h2 id="activity-mix-title">Activity mix</h2>
+          </div>
+          <span class="mix-period">{{ periodTitle }}</span>
+        </div>
+        <div class="mix-item">
+          <div class="mix-heading">
+            <span><img src="/assets/sneaker.png" alt=""> Running</span>
+            <strong>{{ periodRunningWorkouts.length }} <small>sessions</small></strong>
+          </div>
+          <div class="mix-track"><div class="mix-fill running-fill" [style.width.%]="periodRunningShare"></div></div>
+          <small>{{ periodDistanceKm | number:'1.0-1' }} km run in {{ periodTitle.toLowerCase() }}</small>
+        </div>
+        <div class="mix-item">
+          <div class="mix-heading">
+            <span><img src="/assets/dumbbell.png" alt=""> Strength training</span>
+            <strong>{{ periodStrengthWorkouts.length }} <small>sessions</small></strong>
+          </div>
+          <div class="mix-track"><div class="mix-fill strength-fill" [style.width.%]="periodStrengthShare"></div></div>
+          <small>{{ periodSets }} sets completed in {{ periodTitle.toLowerCase() }}</small>
+        </div>
+      </section>
+
+      <section class="dashboard-calendar scroll-reveal" #scrollReveal aria-labelledby="dashboard-calendar-title">
+        <div class="calendar-heading">
+          <div>
+            <p class="eyebrow">YOUR TRAINING HISTORY</p>
+            <h2 id="dashboard-calendar-title">{{ dashboardCalendarTitle }}</h2>
+          </div>
+          <div class="calendar-controls">
+            <button type="button" (click)="previousCalendarMonth()" aria-label="Previous month">‹</button>
+            <button type="button" (click)="nextCalendarMonth()" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <div class="dashboard-calendar-grid calendar-weekdays" aria-hidden="true">
+          <span *ngFor="let day of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']">{{ day }}</span>
+        </div>
+        <div class="dashboard-calendar-grid calendar-days">
+          <div *ngFor="let day of dashboardCalendarDays" class="calendar-day" [class.outside-month]="!day.inCurrentMonth">
+            <span class="calendar-date">{{ day.date.getDate() }}</span>
+            <div class="calendar-workout-icons">
+              <img *ngFor="let workout of day.workouts | slice:0:3"
+                [src]="workout.workout_type === 'Running' ? '/assets/sneaker.png' : '/assets/dumbbell.png'"
+                [class.running-calendar-icon]="workout.workout_type === 'Running'"
+                [class.strength-calendar-icon]="workout.workout_type === 'Strength Training'"
+                [alt]="workout.workout_type + ' session'">
+              <span *ngIf="day.workouts.length > 3">+{{ day.workouts.length - 3 }}</span>
+            </div>
+            <span *ngIf="day.workouts.length" class="calendar-session-count">
+              {{ day.workouts.length }} {{ day.workouts.length === 1 ? 'session' : 'sessions' }}
+            </span>
+          </div>
+        </div>
+        <div class="calendar-legend">
+          <span><img src="/assets/sneaker.png" alt=""> Running</span>
+          <span><img src="/assets/dumbbell.png" alt=""> Strength</span>
+        </div>
+      </section>
+    </ng-container>
+  </ng-container>
+</main>

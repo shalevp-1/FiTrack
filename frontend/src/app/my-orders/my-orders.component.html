@@ -1,0 +1,192 @@
+
+<div class="orders-page">
+  <header class="orders-header">
+    <h1>My Orders</h1>
+
+    <a routerLink="/products" class="shop-button">
+      <span aria-hidden="true">＋</span>
+      Continue shopping
+    </a>
+  </header>
+
+  <section *ngIf="loading" class="state-card" aria-live="polite">
+    <div class="spinner"></div>
+    <h2>Loading orders...</h2>
+  </section>
+
+  <section
+    *ngIf="!loading && errorMessage"
+    class="state-card error-card"
+    role="alert">
+    <h2>Couldn't load orders</h2>
+    <p>{{ errorMessage }}</p>
+    <button type="button" class="retry-button" (click)="loadOrders()">
+      Try again
+    </button>
+  </section>
+
+  <ng-container *ngIf="!loading && !errorMessage">
+    <section class="orders-summary">
+      <div class="summary-card summary-sage">
+        <span class="summary-label">Total orders</span>
+        <strong>{{ orders.length }}</strong>
+      </div>
+
+      <div class="summary-card summary-lavender">
+        <span class="summary-label">Completed orders</span>
+        <strong>{{ countCompleted() }}</strong>
+      </div>
+    </section>
+
+    <section class="orders-section">
+      <div class="section-heading">
+        <h2>Order history</h2>
+        <span class="orders-count">
+          {{ orders.length }} {{ orders.length === 1 ? 'order' : 'orders' }}
+        </span>
+      </div>
+
+      <div *ngIf="orders.length === 0" class="state-card empty-card">
+        <div class="empty-icon">＋</div>
+        <h2>No orders yet</h2>
+        <a routerLink="/products" class="shop-button">
+          Explore products
+        </a>
+      </div>
+
+      <div *ngIf="orders.length > 0" class="orders-list">
+        <article class="order-card" *ngFor="let order of orders">
+
+          <div class="order-top">
+            <div class="order-reference">
+              <h3>Order #{{ order.id }}</h3>
+              <span class="order-date">
+                {{ order.created_at | date:'d MMM y, HH:mm' }}
+              </span>
+            </div>
+
+            <span
+              class="status-badge"
+              [class.status-pending]="order.status.toLowerCase() === 'pending'"
+              [class.status-completed]="order.status.toLowerCase() === 'completed'"
+              [class.status-cancelled]="order.status.toLowerCase() === 'cancelled'"
+              [class.status-other]="
+                order.status.toLowerCase() !== 'pending' &&
+                order.status.toLowerCase() !== 'completed' &&
+                order.status.toLowerCase() !== 'cancelled'
+              ">
+              {{ order.status | titlecase }}
+            </span>
+          </div>
+
+          <div class="order-middle">
+            <div class="order-info">
+              <span class="info-label">Items</span>
+              <strong>
+                {{ order.item_count }}
+                {{ order.item_count === 1 ? 'item' : 'items' }}
+              </strong>
+            </div>
+
+            <div class="order-info">
+              <span class="info-label">Payment</span>
+              <strong>{{ order.payment_status | titlecase }}</strong>
+            </div>
+
+            <div class="order-info total-info">
+              <span class="info-label">Total</span>
+              <strong class="order-total">
+                {{ order.total_amount | currency:'ILS':'symbol':'1.2-2' }}
+              </strong>
+            </div>
+          </div>
+
+          <div class="order-breakdown">
+            <div>
+              <span>Subtotal</span>
+              <span>
+                {{ order.subtotal | currency:'ILS':'symbol':'1.2-2' }}
+              </span>
+            </div>
+
+            <div>
+              <span>Shipping</span>
+              <span>
+                {{ order.shipping_cost | currency:'ILS':'symbol':'1.2-2' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="order-actions">
+            <button
+              type="button"
+              class="details-button"
+              (click)="toggleOrderDetails(order.id)"
+              [attr.aria-expanded]="expandedOrderId === order.id">
+              {{ expandedOrderId === order.id ? 'Hide items' : 'View items' }}
+              <span aria-hidden="true">
+                {{ expandedOrderId === order.id ? '−' : '+' }}
+              </span>
+            </button>
+          </div>
+
+          <div
+            *ngIf="expandedOrderId === order.id"
+            class="order-items"
+            aria-live="polite">
+
+            <p
+              *ngIf="loadingOrderDetailsId === order.id"
+              class="details-message">
+              Loading items...
+            </p>
+
+            <p
+              *ngIf="detailsError && expandedOrderId === order.id"
+              class="details-message error-message"
+              role="alert">
+              {{ detailsError }}
+            </p>
+
+            <ng-container
+              *ngIf="expandedOrder && expandedOrder.id === order.id">
+
+              <h4>Items purchased</h4>
+
+              <div
+                class="purchased-item"
+                *ngFor="let item of expandedOrder.items">
+
+                <div class="purchased-item-info">
+                  <span class="purchased-item-name">
+                    {{ item.product_name }}
+                  </span>
+                  <span class="purchased-item-quantity">
+                    Quantity: {{ item.quantity }}
+                  </span>
+                </div>
+
+                <div class="purchased-item-prices">
+                  <span>
+                    {{ item.unit_price | currency:'ILS':'symbol':'1.2-2' }}
+                    each
+                  </span>
+                  <strong>
+                    {{ getLineTotal(item) | currency:'ILS':'symbol':'1.2-2' }}
+                  </strong>
+                </div>
+              </div>
+
+              <p
+                *ngIf="expandedOrder.items.length === 0"
+                class="details-message">
+                No items were found for this order.
+              </p>
+            </ng-container>
+          </div>
+
+        </article>
+      </div>
+    </section>
+  </ng-container>
+</div>

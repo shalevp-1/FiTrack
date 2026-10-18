@@ -1,0 +1,85 @@
+<div class="products-page">
+    <button type="button" class="store-cart-trigger" (click)="openCart()" aria-label="Open shopping cart">
+        <span>Cart</span>
+        <span class="store-cart-count">{{ itemCount }}</span>
+    </button>
+          
+
+    <div class="products-header">
+       
+        <h1>Gear up for your next move.</h1>
+    </div>
+    <a routerLink="/my-orders" class="my-orders-button">
+                My Orders
+            </a>
+
+
+    <div *ngIf="loading" class="products-message">
+        Loading products...
+    </div>
+
+    <div *ngIf="errorMessage" class="products-message products-error">
+        {{ errorMessage }}
+    </div>
+
+    <div *ngIf="!loading && !errorMessage && products.length === 0" class="products-message">
+        No products are available right now.
+    </div>
+
+    <div *ngIf="!loading && !errorMessage && products.length > 0" class="products-grid">
+        <div *ngFor="let product of products" class="product-card" role="button" tabindex="0"
+            (click)="userClickedAProduct(product.id)" (keydown.enter)="userClickedAProduct(product.id)">
+
+            <div class="product-image">
+                <img *ngIf="product.image_url" [src]="product.image_url" [alt]="product.name" loading="lazy" />
+
+                <span *ngIf="!product.image_url" class="product-image-placeholder">
+                    Image coming soon
+                </span>
+            </div>
+
+            <div class="product-info">
+
+                <p *ngIf="product.category" class="product-category">
+                    {{ product.category }}
+                </p>
+
+                <h2 class="product-name">{{ product.name }}</h2>
+
+                <div class="product-footer">
+                    <p class="product-price">
+                        {{ product.price | currency:'ILS':'symbol':'1.2-2' }}
+                    </p>
+
+                    <button type="button" class="product-view-button"
+                        (click)="userClickedAProduct(product.id); $event.stopPropagation()">
+                        View details
+                    </button>
+                </div>
+
+                <button type="button" class="product-add-button" [disabled]="product.stock_quantity <= 0"
+                    (click)="addToCart(product, $event)">
+                    {{ product.stock_quantity > 0 ? 'Add to cart' : 'Out of stock' }}
+                </button>
+
+                <p class="product-stock" [class.out-of-stock]="product.stock_quantity === 0">
+                    {{
+                    product.stock_quantity > 0
+                    ? 'In stock'
+                    : 'Currently unavailable'
+                    }}
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <p
+        *ngIf="cartMessage && cartMessageType === 'error'"
+        class="cart-message cart-error"
+        role="alert">
+        {{ cartMessage }}
+    </p>
+</div>

@@ -1,0 +1,238 @@
+.home {
+  position: relative;
+  display: flex;
+  min-height: 100svh;
+  align-items: center;
+  padding: 112px max(24px, calc((100vw - 1120px) / 2)) 82px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, #17192df2 0%, #17192dd9 35%, #17192d78 64%, #17192d12 100%),
+    url('/assets/running-1.png') 68% 48% / cover no-repeat;
+}
+
+.home-content {
+  width: min(600px, 65%);
+  text-align: left;
+}
+
+.home h1 {
+  margin: 0 0 18px;
+  color: #fff;
+  font-size: clamp(46px, 6.8vw, 78px);
+  line-height: 1.04;
+  letter-spacing: -2.8px;
+}
+
+.home-text {
+  max-width: 520px;
+  margin: 0 0 28px;
+  color: #e1e1ee;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.home-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 11px;
+}
+
+.button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 0 20px;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.primary-button {
+  background: #a79cff;
+  color: #211d47;
+  box-shadow: 0 8px 22px rgb(8 8 28 / 24%);
+}
+
+.primary-button:hover {
+  background: #c1baff;
+}
+
+.primary-button span {
+  font-size: 19px;
+  line-height: 1;
+}
+
+.secondary-button {
+  border: 1px solid rgb(255 255 255 / 48%);
+  background: rgb(255 255 255 / 11%);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+.secondary-button:hover {
+  background: rgb(255 255 255 / 20%);
+}
+
+.features {
+  display: grid;
+  min-height: 235px;
+  place-items: center;
+  padding: 56px 24px;
+  background: #f6f6fb;
+}
+
+.features-title {
+  text-align: center;
+}
+
+.features-label {
+  margin: 0 0 9px;
+  color: #7465d9;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+.features-title h2 {
+  margin: 0;
+  color: #252640;
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -1px;
+}
+
+.home-bottom {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 400px;
+  align-content: center;
+  justify-items: center;
+  padding: 76px 24px;
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+  background: #1c1d34;
+}
+
+.home-bottom::before {
+  position: absolute;
+  z-index: -2;
+  inset: -5%;
+  background: url('/assets/gym-1.jpg') center 48% / cover no-repeat;
+  content: '';
+  transform: scale(1.1);
+  transition: transform 1.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.home-bottom::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(90deg, rgb(18 19 38 / 83%), rgb(18 19 38 / 53%));
+  content: '';
+}
+
+.home-bottom.reveal-visible::before {
+  transform: scale(1);
+}
+
+.home-bottom .features-label {
+  color: #c1baff;
+}
+
+.home-bottom h2 {
+  max-width: 650px;
+  margin: 10px auto 23px;
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -0.7px;
+}
+
+.home-bottom .primary-button {
+  background: #a79cff;
+  box-shadow: none;
+}
+
+.home-bottom .primary-button:hover {
+  background: #c1baff;
+}
+
+.home-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 800ms ease, transform 800ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.home-reveal.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .home-bottom::before {
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .home {
+    min-height: 100svh;
+    padding: 108px 24px 68px;
+    background:
+      linear-gradient(90deg, #17192de8, #17192da3),
+      url('/assets/running-1.png') 60% center / cover no-repeat;
+  }
+
+  .home-content {
+    width: min(570px, 100%);
+  }
+}
+
+@media (max-width: 480px) {
+  .home {
+    min-height: 100svh;
+    padding: 98px 20px 58px;
+    background:
+      linear-gradient(90deg, #17192df0, #17192db3),
+      url('/assets/running-1.png') 58% center / cover no-repeat;
+  }
+
+  .home h1 {
+    font-size: 48px;
+    letter-spacing: -2px;
+  }
+
+  .home-text {
+    font-size: 15px;
+  }
+
+  .home-buttons {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .button {
+    width: 100%;
+  }
+
+  .home-bottom {
+    min-height: 360px;
+    padding: 65px 20px;
+  }
+}

@@ -1,0 +1,389 @@
+
+<div class="admin-page">
+  <h1 class="subtitle">Admin Dashboard</h1>
+  
+
+  <p *ngIf="loading">Loading dashboard...</p>
+
+  <p *ngIf="error" class="error">
+    {{ error }}
+  </p>
+
+  <ng-container *ngIf="!loading && !error && overview">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <p>Total Sales</p>
+        <h2>{{ overview.totalSales | currency:'ILS':'symbol':'1.2-2' }}</h2>
+      </div>
+
+      <div class="stat-card">
+        <p>Total Orders</p>
+        <h2>{{ overview.totalOrders }}</h2>
+      </div>
+
+      <div class="stat-card">
+        <p>Active Products</p>
+        <h2>{{ overview.totalProducts }}</h2>
+      </div>
+
+      <div class="stat-card" [class.warning]="overview.lowStockProducts > 0">
+        <p>Low Stock Products</p>
+        <h2>{{ overview.lowStockProducts }}</h2>
+      </div>
+    </div>
+
+    <section class="orders-section">
+      <h2>Recent Orders</h2>
+
+      <p *ngIf="overview.recentOrders.length === 0">
+        No orders yet.
+      </p>
+
+      <div class="table-wrapper" *ngIf="overview.recentOrders.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Payment</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let order of overview.recentOrders">
+              <td>#{{ order.id }}</td>
+              <td>{{ order.username }}</td>
+              <td>{{ order.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ order.total_amount | currency:'ILS':'symbol':'1.2-2' }}</td>
+              <td>{{ order.status }}</td>
+              <td>{{ order.payment_status }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+
+  <section class="inventory-section" aria-labelledby="inventory-title">
+      <div class="inventory-heading">
+        <div>
+          <h2 id="inventory-title">Inventory Management</h2>
+          
+        </div>
+        <div class="inventory-heading-actions">
+          <button type="button" class="refresh-button" (click)="loadInventory()">
+            Refresh inventory
+          </button>
+          <button
+            type="button"
+            class="restock-button"
+            (click)="openCreateProductForm()">
+            Add product
+          </button>
+        </div>
+      </div>
+
+      <p
+        *ngIf="inventoryMessage"
+        class="inventory-message"
+        [class.inventory-error]="inventoryMessageType === 'error'"
+        role="status">
+        {{ inventoryMessage }}
+      </p>
+
+      <div
+        class="inventory-warnings"
+        aria-live="polite"
+        *ngIf="!inventoryLoading && !inventoryError">
+        <p *ngIf="outOfStockCount > 0" class="inventory-warning out-warning">
+          {{ outOfStockCount }} product{{ outOfStockCount === 1 ? '' : 's' }} out of stock.
+        </p>
+        <p *ngIf="lowStockCount > 0" class="inventory-warning low-warning">
+          {{ lowStockCount }} product{{ lowStockCount === 1 ? '' : 's' }} low on stock
+          ({{ lowStockThreshold }} units or fewer).
+        </p>
+        <p *ngIf="!outOfStockCount && !lowStockCount" class="inventory-good">
+          All products have healthy stock levels.
+        </p>
+      </div>
+
+      <div class="inventory-controls">
+        <label class="inventory-search">
+          <span>Search products</span>
+          <input
+            type="search"
+            [(ngModel)]="searchTerm"
+            placeholder="Search by name">
+        </label>
+
+        <div class="inventory-filters" aria-label="Filter inventory">
+          <button
+            type="button"
+            [class.selected]="inventoryFilter === 'all'"
+            [attr.aria-pressed]="inventoryFilter === 'all'"
+            (click)="inventoryFilter = 'all'">
+            All products
+          </button>
+          <button
+            type="button"
+            [class.selected]="inventoryFilter === 'low-stock'"
+            [attr.aria-pressed]="inventoryFilter === 'low-stock'"
+            (click)="inventoryFilter = 'low-stock'">
+            Low stock
+          </button>
+          <button
+            type="button"
+            [class.selected]="inventoryFilter === 'out-of-stock'"
+            [attr.aria-pressed]="inventoryFilter === 'out-of-stock'"
+            (click)="inventoryFilter = 'out-of-stock'">
+            Out of stock
+          </button>
+        </div>
+      </div>
+
+      <p *ngIf="inventoryLoading">Loading inventory...</p>
+      <p *ngIf="inventoryError" class="error" role="alert">
+        {{ inventoryError }}
+      </p>
+
+      <p
+        *ngIf="!inventoryLoading && !inventoryError && inventoryProducts.length === 0">
+        No products found in inventory.
+      </p>
+
+      <div
+        class="table-wrapper inventory-table-wrapper"
+        *ngIf="!inventoryLoading && !inventoryError && inventoryProducts.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Stock quantity</th>
+              <th>Stock status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let product of filteredInventoryProducts">
+              <td>
+                {{ product.name }}
+                <span *ngIf="!product.is_active" class="inactive-label">(Inactive)</span>
+              </td>
+              <td>{{ product.price | currency:'ILS':'symbol':'1.2-2' }}</td>
+              <td>{{ product.stock_quantity }}</td>
+              <td>
+                <span
+                  class="stock-badge"
+                  [class.stock-low]="product.stock_quantity > 0 && product.stock_quantity <= lowStockThreshold"
+                  [class.stock-out]="product.stock_quantity === 0">
+                  {{ getStockStatus(product) }}
+                </span>
+              </td>
+              <td>
+                <button
+                  *ngIf="product.is_active"
+                  type="button"
+                  class="restock-button"
+                  (click)="openRestockForm(product)">
+                  Restock
+                </button>
+                <button
+                  type="button"
+                  class="edit-button"
+                  (click)="openEditProductForm(product)">
+                  Edit
+                </button>
+                <button
+                  *ngIf="product.is_active"
+                  type="button"
+                  class="deactivate-button"
+                  [disabled]="deactivatingProductId === product.id"
+                  (click)="deactivateProduct(product)">
+                  {{ deactivatingProductId === product.id ? 'Deactivating...' : 'Deactivate' }}
+                </button>
+                <button
+                  *ngIf="!product.is_active"
+                  type="button"
+                  class="reactivate-button"
+                  [disabled]="reactivatingProductId === product.id"
+                  (click)="reactivateProduct(product)">
+                  {{ reactivatingProductId === product.id ? 'Reactivating...' : 'Reactivate' }}
+                </button>
+                <button
+                  *ngIf="!product.is_active"
+                  type="button"
+                  class="delete-button"
+                  [disabled]="!!product.has_order_history || deletingProductId === product.id"
+                  [title]="product.has_order_history ? 'Products linked to order history cannot be deleted' : 'Permanently delete product'"
+                  (click)="deleteProduct(product)">
+                  {{ deletingProductId === product.id ? 'Deleting...' : 'Delete permanently' }}
+                </button>
+                <span
+                  *ngIf="!product.is_active && product.has_order_history"
+                  class="delete-unavailable">
+                  Linked to order history
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="filteredInventoryProducts.length === 0">
+              <td colspan="5" class="inventory-empty-filter">
+                No products match this search and filter.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+  </section>
+</div>
+
+<div
+  *ngIf="productEditorMode"
+  class="restock-backdrop">
+  <section
+    class="restock-modal product-editor-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="product-editor-title"
+    (click)="$event.stopPropagation()">
+    <h2 id="product-editor-title">
+      {{ productEditorMode === 'create' ? 'Add product' : 'Edit product' }}
+    </h2>
+
+    <form #productEditor="ngForm" (ngSubmit)="saveProduct()">
+      <label for="product-name">Name</label>
+      <input
+        id="product-name"
+        name="name"
+        type="text"
+        maxlength="150"
+        required
+        [(ngModel)]="productForm.name">
+
+      <label for="product-description">Description</label>
+      <textarea
+        id="product-description"
+        name="description"
+        maxlength="65535"
+        rows="3"
+        [(ngModel)]="productForm.description">
+      </textarea>
+
+      <label for="product-image">Image URL or path</label>
+      <input
+        id="product-image"
+        name="image_url"
+        type="text"
+        maxlength="500"
+        [(ngModel)]="productForm.image_url">
+
+      <label for="product-category">Category</label>
+      <input
+        id="product-category"
+        name="category"
+        type="text"
+        maxlength="100"
+        [(ngModel)]="productForm.category">
+
+      <div class="product-number-fields">
+        <div>
+          <label for="product-price">Price (ILS)</label>
+          <input
+            id="product-price"
+            name="price"
+            type="number"
+            min="0"
+            max="99999999.99"
+            step="0.01"
+            required
+            [(ngModel)]="productForm.price">
+        </div>
+        <div>
+          <label for="product-stock">Stock quantity</label>
+          <input
+            id="product-stock"
+            name="stock_quantity"
+            type="number"
+            min="0"
+            max="2147483647"
+            step="1"
+            required
+            [(ngModel)]="productForm.stock_quantity">
+        </div>
+      </div>
+
+      <p
+        *ngIf="inventoryMessage && inventoryMessageType === 'error'"
+        class="restock-error"
+        role="alert">
+        {{ inventoryMessage }}
+      </p>
+
+      <div class="restock-actions">
+        <button
+          type="button"
+          class="cancel-button"
+          [disabled]="productSaving"
+          (click)="closeProductForm()">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="restock-button"
+          [disabled]="productSaving || productEditor.invalid">
+          {{ productSaving ? 'Saving...' : 'Save product' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<div
+  *ngIf="restockProduct"
+  class="restock-backdrop"
+  (click)="closeRestockForm()">
+  <section
+    class="restock-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="restock-title"
+    (click)="$event.stopPropagation()">
+    <h2 id="restock-title">Restock {{ restockProduct.name }}</h2>
+    <p>Current stock: {{ restockProduct.stock_quantity }}</p>
+
+    <form (ngSubmit)="restock()">
+      <label for="restock-quantity">Quantity to add</label>
+      <input
+        id="restock-quantity"
+        name="restockQuantity"
+        type="number"
+        min="1"
+        step="1"
+        required
+        [(ngModel)]="restockQuantity">
+
+      <p
+        *ngIf="inventoryMessage && inventoryMessageType === 'error'"
+        class="restock-error"
+        role="alert">
+        {{ inventoryMessage }}
+      </p>
+
+      <div class="restock-actions">
+        <button
+          type="button"
+          class="cancel-button"
+          [disabled]="restocking"
+          (click)="closeRestockForm()">
+          Cancel
+        </button>
+        <button type="submit" class="restock-button" [disabled]="restocking">
+          {{ restocking ? 'Restocking...' : 'Confirm restock' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

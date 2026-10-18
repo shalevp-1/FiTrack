@@ -1,0 +1,130 @@
+
+<div
+  class="cart-backdrop"
+  *ngIf="cartDrawerOpen"
+  (click)="closeCart()">
+</div>
+
+<aside
+  class="cart-drawer"
+  [class.cart-drawer-open]="cartDrawerOpen"
+  [attr.aria-hidden]="!cartDrawerOpen"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Shopping cart">
+
+  <div class="cart-drawer-header">
+    <div>
+      <h2>Your Cart</h2>
+      <p>{{ itemCount }} {{ itemCount === 1 ? 'item' : 'items' }}</p>
+    </div>
+
+    <button
+      type="button"
+      class="cart-drawer-close"
+      (click)="closeCart()"
+      aria-label="Close shopping cart">
+      &times;
+    </button>
+  </div>
+
+  <div
+    *ngIf="cartMessage"
+    class="cart-message"
+    [class.cart-error]="cartMessageType === 'error'"
+    role="status">
+    {{ cartMessage }}
+  </div>
+
+  <div *ngIf="cartItems.length === 0" class="cart-drawer-empty">
+    <h3>Your cart is empty</h3>
+    <p>Find something that helps you move better.</p>
+    <button
+      type="button"
+      class="cart-drawer-primary"
+      (click)="closeCart()">
+      Explore products
+    </button>
+  </div>
+
+  <ng-container *ngIf="cartItems.length > 0">
+    <div class="cart-drawer-items">
+      <div *ngFor="let item of cartItems" class="cart-drawer-item">
+        <div class="cart-drawer-image">
+          <img
+            *ngIf="item.product.image_url"
+            [src]="item.product.image_url"
+            [alt]="item.product.name">
+
+          <span *ngIf="!item.product.image_url">No image</span>
+        </div>
+
+        <div class="cart-drawer-product">
+          <h3>{{ item.product.name }}</h3>
+
+          <p>
+            {{ item.product.price | currency:'ILS':'symbol':'1.2-2' }}
+          </p>
+
+          <div class="cart-drawer-quantity">
+            <button
+              type="button"
+              (click)="changeQuantity(item, item.quantity - 1)"
+              [disabled]="item.quantity <= 1"
+              aria-label="Decrease quantity">
+              −
+            </button>
+
+            <span>{{ item.quantity }}</span>
+
+            <button
+              type="button"
+              (click)="changeQuantity(item, item.quantity + 1)"
+              [disabled]="item.quantity >= item.product.stock_quantity"
+              aria-label="Increase quantity">
+              +
+            </button>
+          </div>
+        </div>
+
+        <div class="cart-drawer-item-end">
+          <strong>
+            {{ (+item.product.price) * item.quantity | currency:'ILS':'symbol':'1.2-2' }}
+          </strong>
+
+          <button
+            type="button"
+            class="cart-drawer-remove"
+            (click)="removeItem(item)">
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cart-drawer-footer">
+      <div class="cart-drawer-subtotal">
+        <span>Subtotal</span>
+        <strong>{{ subtotal | currency:'ILS':'symbol':'1.2-2' }}</strong>
+      </div>
+
+      <p class="cart-drawer-note">
+        Shipping and applicable discounts are calculated at checkout.
+      </p>
+
+      <button
+        type="button"
+        class="cart-drawer-primary"
+        (click)="goToCheckout()">
+        Continue to checkout
+      </button>
+
+      <button
+        type="button"
+        class="cart-drawer-secondary"
+        (click)="closeCart()">
+        Continue shopping
+      </button>
+    </div>
+  </ng-container>
+</aside>

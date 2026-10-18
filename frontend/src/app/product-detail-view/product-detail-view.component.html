@@ -1,0 +1,59 @@
+<div class="product-detail">
+    <a routerLink="/products" class="back-to-store">
+        ← Back to Store
+    </a>
+    <p *ngIf="loading">Loading product...</p>
+
+    <p *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+    </p>
+
+    <div *ngIf="product && !loading" class="product-content">
+        <div class="product-image">
+            <img *ngIf="product.image_url" [src]="product.image_url" [alt]="product.name" />
+
+            <div *ngIf="!product.image_url" class="no-image">
+                No image available
+            </div>
+        </div>
+
+        <div class="product-info">
+            <p class="product-category" *ngIf="product.category">
+                {{ product.category }}
+            </p>
+
+            <h1>{{ product.name }}</h1>
+
+            <p class="product-description">
+                {{ product.description || 'No description available.' }}
+            </p>
+
+            <p class="product-price">
+                {{ product.price | currency:'ILS':'symbol':'1.2-2' }}
+            </p>
+
+            <p class="product-stock" [class.out-of-stock]="product.stock_quantity === 0">
+                {{
+                product.stock_quantity > 0
+                ? product.stock_quantity + ' available in stock'
+                : 'Out of stock'
+                }}
+            </p>
+
+            <button type="button" [disabled]="product.stock_quantity === 0" (click)="addToCart()">
+                {{ product.stock_quantity > 0 ? 'Add to cart' : 'Out of stock' }}
+            </button>
+
+
+            <button type="button" class="store-cart-trigger" (click)="openCart()" aria-label="Open shopping cart">
+                Cart <span>{{ cartItemCount }}</span>
+            </button>
+
+
+
+            <p *ngIf="cartMessage" class="cart-message" [class.cart-error]="cartMessageType === 'error'">
+                {{ cartMessage }}
+            </p>
+        </div>
+    </div>
+</div>

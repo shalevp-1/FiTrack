@@ -1,0 +1,97 @@
+<div class="checkout-page">
+  <header class="checkout-header">
+    <p class="checkout-label">FITRACK STORE</p>
+    <h1>Checkout.</h1>
+    <p>Almost time to gear up.</p>
+
+    <a routerLink="/cart" class="back-to-cart">
+      ← Back to cart
+    </a>
+  </header>
+
+  <div *ngIf="orderPlaced" class="checkout-success-panel">
+    <h2>Order placed successfully!</h2>
+    <p>Your order number is #{{ orderId }}.</p>
+    <p>
+      Order total:
+      <strong>{{ orderTotal | currency:'ILS':'symbol':'1.2-2' }}</strong>
+    </p>
+    <p class="checkout-note">
+      This is a demo order. Payment has not been processed.
+    </p>
+    <a routerLink="/products" class="checkout-button">
+      Continue shopping
+    </a>
+  </div>
+
+  <div *ngIf="!orderPlaced && items.length === 0" class="empty-checkout">
+    <h2>Your cart is empty.</h2>
+    <p>Add some gear before proceeding to checkout.</p>
+    <a routerLink="/products" class="checkout-button">
+      Explore products
+    </a>
+  </div>
+
+  <div *ngIf="!orderPlaced && items.length > 0" class="checkout-layout">
+    <section class="checkout-form checkout-section">
+      <h2>Ready to place your order?</h2>
+      <p>
+        Your order will be linked to your logged-in Fitrack account.
+      </p>
+      <p>
+        Review your items and total before confirming.
+      </p>
+
+      <p
+        *ngIf="message"
+        class="checkout-message"
+        [class.checkout-error]="messageType === 'error'"
+        role="alert"
+      >
+        {{ message }}
+      </p>
+
+      <button
+        type="button"
+        class="place-order-button"
+        [disabled]="submitting"
+        (click)="placeOrder()"
+      >
+        {{ submitting ? 'Processing...' : 'Place Order' }}
+      </button>
+    </section>
+
+    <aside class="checkout-summary">
+      <h2>Your order</h2>
+
+      <article class="checkout-item" *ngFor="let item of items">
+        <div class="checkout-item-image">
+          <img
+            *ngIf="item.product.image_url"
+            [src]="item.product.image_url"
+            [alt]="item.product.name"
+          />
+          <span class="checkout-item-quantity">{{ item.quantity }}</span>
+        </div>
+
+        <div class="checkout-item-info">
+          <h3>{{ item.product.name }}</h3>
+          <p>Quantity: {{ item.quantity }}</p>
+        </div>
+
+        <span class="checkout-item-price">
+          {{ (+item.product.price) * item.quantity | currency:'ILS':'symbol':'1.2-2' }}
+        </span>
+      </article>
+
+      <div class="checkout-total">
+        <span>Subtotal</span>
+        <strong>{{ subtotal | currency:'ILS':'symbol':'1.2-2' }}</strong>
+      </div>
+
+      <p class="checkout-note">
+        This demo does not process payments or collect shipping details.
+      </p>
+    </aside>
+  </div>
+</div>

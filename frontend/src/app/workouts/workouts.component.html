@@ -1,0 +1,574 @@
+<div class="workouts-page">
+    <header class="page-header">
+        <div>
+            <p class="page-kicker">YOUR TRAINING</p>
+            <h1>My Workouts</h1>
+            <p class="page-description">Keep track of every session and every bit of progress.</p>
+        </div>
+
+        <button type="button" class="primary-button"
+            (click)="resetForm(); showForm = true; errorMessage = ''; successMessage = ''">
+            <span aria-hidden="true">+</span>
+            Add workout
+        </button>
+    </header>
+
+    <div *ngIf="successMessage" class="message success-message" role="status">
+        {{ successMessage }}
+    </div>
+
+    <!-- CREATE / EDIT FORM -->
+    <section *ngIf="showForm" class="workout-form-card">
+        <div class="form-heading">
+            <div>
+                <p class="section-kicker">{{ isEditing ? 'UPDATE SESSION' : 'NEW SESSION' }}</p>
+                <h2>{{ isEditing ? 'Edit workout' : 'Add a workout' }}</h2>
+            </div>
+            <button type="button" class="text-button" (click)="cancelForm()">Cancel</button>
+        </div>
+
+        <form #workoutForm="ngForm" (ngSubmit)="saveWorkout()">
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="workoutType">Workout type</label>
+                    <select id="workoutType" name="workoutType" [(ngModel)]="newWorkout.workout_type_id"
+                        (ngModelChange)="onWorkoutTypeChange()">
+                        <option [ngValue]="1">Running</option>
+                        <option [ngValue]="2">Strength Training</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="workoutDate">Date and time</label>
+                    <input id="workoutDate" type="datetime-local" name="workoutDate"
+                        [(ngModel)]="newWorkout.workout_date" min="1950-01-01T00:00" [max]="maxWorkoutDate"
+                        (change)="validateWorkoutDateInput($event)" required>
+                </div>
+
+               
+<div class="form-field">
+    <label for="duration">Actual duration (minutes)</label>
+    <input
+        id="duration"
+        type="text"
+        inputmode="numeric"
+        name="duration"
+        maxlength="8"
+        pattern="[0-9]{1,8}"
+        [(ngModel)]="newWorkout.duration_minutes"
+        (input)="limitDigits($event, 8)"
+        required>
+    
+    <small *ngIf="newWorkout.workout_type_id === 1 && estimatedDurationMinutes !== null">
+        Estimated running time: {{ formatEstimatedDuration(estimatedDurationMinutes) }}
+    </small>
+    
+    <small *ngIf="newWorkout.workout_type_id === 1">
+        Based on distance and average pace. Breaks may increase actual elapsed time.
+    </small>
+</div>
+
+                <div class="form-field form-field-wide">
+                    <label for="workoutNotes">Notes</label>
+                    <textarea id="workoutNotes" name="workoutNotes" rows="3" [(ngModel)]="newWorkout.notes"
+                        placeholder="How did the session feel?"></textarea>
+                </div>
+            </div>
+
+            <!-- RUNNING DETAILS -->
+            <div *ngIf="newWorkout.workout_type_id === 1" class="details-section">
+                <div class="details-heading">
+                    <h3>Running details</h3>
+                    <p>Record your distance, pace, heart rate, and elevation.</p>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="distance">Distance (km)</label>
+                       
+<input
+    id="distance"
+    type="text"
+    inputmode="decimal"
+    name="distance"
+    maxlength="7"
+    pattern="[0-9]{1,4}(\.[0-9]{1,2})?"
+    [(ngModel)]="runningDetails.distance_km"
+    (ngModelChange)="updateEstimatedDuration()"
+    (input)="limitDecimal($event, 4, 2)"
+    required>
+
+                    </div>
+
+                    <div class="form-field">
+                        <label for="pace">Average pace (mm:ss / km)</label>
+                       
+<input
+    id="pace"
+    type="text"
+    name="pace"
+    [(ngModel)]="avgPaceInput"
+    (ngModelChange)="updateEstimatedDuration()"
+    placeholder="6:05"
+    maxlength="6"
+    pattern="[0-9]{1,3}:[0-5][0-9]"
+    (input)="avgPaceInput = avgPaceInput.slice(0, 6)">
+
+                    </div>
+
+                    <div class="form-field">
+                        <label for="heartRate">Average heart rate (bpm)</label>
+                        <input id="heartRate" type="text" inputmode="numeric" name="heartRate" maxlength="3"
+                            pattern="[0-9]{1,3}" [(ngModel)]="runningDetails.avg_heart_rate"
+                            (input)="limitDigits($event, 3)">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="elevation">Elevation gain (m)</label>
+                        <input id="elevation" type="text" inputmode="numeric" name="elevation" maxlength="4"
+                            pattern="[0-9]{1,4}" [(ngModel)]="runningDetails.elevation_gain_m"
+                            (input)="limitDigits($event, 4)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- STRENGTH DETAILS -->
+            <div *ngIf="newWorkout.workout_type_id === 2" class="details-section">
+                <div class="details-heading">
+                    <h3>Strength training</h3>
+                    <p>Choose exercises and record the sets for each one.</p>
+                </div>
+
+                <div *ngIf="isLoadingExercises" class="loading-state">
+                    Loading exercise catalog...
+                </div>
+
+                <div *ngFor="let exercise of strengthExercises; let i = index" class="exercise-card">
+                    <div class="exercise-header">
+                        <h4>Exercise {{ i + 1 }}</h4>
+                        <button type="button" class="remove-button" (click)="removeExercise(i)"
+                            [disabled]="strengthExercises.length === 1">
+                            Remove
+                        </button>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-field form-field-wide exercise-picker">
+                            <label [for]="'exerciseSearch' + i">Exercise</label>
+                            <input [id]="'exerciseSearch' + i" [name]="'exerciseSearch' + i" type="text"
+                                [(ngModel)]="exerciseSearchTerms[i]" (focus)="exerciseDropdownOpen[i] = true"
+                                (input)="exerciseDropdownOpen[i] = true" autocomplete="off"
+                                placeholder="Search exercises...">
+
+                            <div class="exercise-filters">
+                                <select [name]="'muscleFilter' + i" [(ngModel)]="exerciseMuscleFilters[i]"
+                                    (ngModelChange)="exerciseDropdownOpen[i] = true">
+                                    <option value="">All muscle groups</option>
+                                    <option *ngFor="let group of getMuscleGroups()" [value]="group">
+                                        {{ group }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div *ngIf="exerciseDropdownOpen[i]" class="exercise-results">
+                                <button type="button" *ngFor="let item of filteredExercises(i)" class="exercise-result"
+                                    (click)="selectExercise(i, item)">
+                                    <span>
+                                        <strong>{{ item.exercise_name }}</strong>
+                                        <small>
+                                            {{ item.muscle_group || 'Other' }}
+                                            <span *ngIf="item.equipment"> · {{ item.equipment }}</span>
+                                        </small>
+                                    </span>
+                                </button>
+
+                                <p *ngIf="filteredExercises(i).length === 0" class="no-exercises">
+                                    No matching exercises.
+                                </p>
+
+                                <button type="button" class="text-button close-results"
+                                    (click)="exerciseDropdownOpen[i] = false">
+                                    Close results
+                                </button>
+                            </div>
+
+                            <p *ngIf="exercise.exercise_id" class="selected-exercise">
+                                Selected: {{ getExerciseName(exercise.exercise_id) }}
+                            </p>
+                        </div>
+
+                        <div class="form-field form-field-wide">
+                            <label [for]="'exerciseNotes' + i">Exercise notes</label>
+                            <input [id]="'exerciseNotes' + i" [name]="'exerciseNotes' + i" type="text"
+                                [(ngModel)]="exercise.notes" placeholder="Optional notes">
+                        </div>
+                    </div>
+
+                    <div class="sets-section">
+                        <h5>Sets</h5>
+
+                        <div *ngFor="let set of exercise.sets; let j = index" class="set-row">
+                            <span class="set-number">{{ j + 1 }}</span>
+
+                            <div class="form-field">
+                                <label [for]="'reps' + i + '-' + j">Reps</label>
+                                <input [id]="'reps' + i + '-' + j" [name]="'reps' + i + '-' + j" type="text"
+                                    inputmode="numeric" maxlength="3" pattern="[0-9]{1,3}" [(ngModel)]="set.reps"
+                                    (input)="limitDigits($event, 3)">
+                            </div>
+
+                            <div class="form-field">
+                                <label [for]="'weight' + i + '-' + j">Weight (kg)</label>
+                                <input [id]="'weight' + i + '-' + j" [name]="'weight' + i + '-' + j" type="text"
+                                    inputmode="decimal" maxlength="6" pattern="[0-9]{1,4}(\.[0-9])?"
+                                    [(ngModel)]="set.weight_kg" (input)="limitDecimal($event, 4, 1)">
+                            </div>
+
+                            <div class="form-field">
+                                <label [for]="'setDuration' + i + '-' + j">
+                                    Duration (min)
+                                </label>
+                                <input [id]="'setDuration' + i + '-' + j" [name]="'setDuration' + i + '-' + j"
+                                    type="text" inputmode="numeric" maxlength="8" pattern="[0-9]{1,8}"
+                                    [(ngModel)]="set.duration_minutes" (input)="limitDigits($event, 8)">
+                            </div>
+
+                            <button type="button" class="remove-button set-remove" (click)="removeSet(i, j)"
+                                [disabled]="exercise.sets.length === 1">
+                                ×
+                            </button>
+                        </div>
+
+                        <button type="button" class="secondary-button" (click)="addSet(i)">
+                            + Add set
+                        </button>
+                    </div>
+                </div>
+
+                <button type="button" class="secondary-button add-exercise-button" (click)="addExercise()">
+                    + Add exercise
+                </button>
+            </div>
+
+            <div *ngIf="errorMessage" class="message error-message" role="alert">
+                {{ errorMessage }}
+            </div>
+
+            <!-- FORM ACTIONS -->
+            <div class="form-actions">
+                <button type="button" class="secondary-button" (click)="cancelForm()" [disabled]="isSaving">
+                    Cancel
+                </button>
+
+                <button type="submit" class="primary-button" [disabled]="isSaving || isLoadingExercises">
+                    {{ isSaving ? 'Saving...' : (isEditing ? 'Save changes' : 'Save workout') }}
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <!-- WORKOUT HISTORY -->
+    <section class="workouts-section">
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">YOUR ACTIVITY</p>
+                <h2>Workout history</h2>
+                <p>Your previous training sessions.</p>
+            </div>
+
+        </div>
+
+        <div class="history-toolbar">
+            <div class="filter-bubbles" aria-label="Filter workouts">
+                <button type="button" class="filter-bubble" [class.active]="historyFilter === 'all'"
+                    (click)="setHistoryFilter('all')">
+                    All
+                </button>
+
+                <button type="button" class="filter-bubble" [class.active]="historyFilter === 'running'"
+                    (click)="setHistoryFilter('running')">
+                    Running
+                </button>
+
+                <button type="button" class="filter-bubble" [class.active]="historyFilter === 'strength'"
+                    (click)="setHistoryFilter('strength')">
+                    Strength training
+                </button>
+            </div>
+
+            <div class="view-switch">
+                <button type="button" [class.active]="historyView === 'list'" (click)="setHistoryView('list')">
+                    List
+                </button>
+
+                <button type="button" [class.active]="historyView === 'calendar'" (click)="setHistoryView('calendar')">
+                    Calendar
+                </button>
+            </div>
+
+            <button type="button" class="secondary-button" (click)="toggleAllWorkouts()"
+                [disabled]="historyView !== 'list' || filteredWorkouts.length === 0">
+                {{ allWorkoutsExpanded ? 'Collapse all' : 'Extend all' }}
+            </button>
+        </div>
+
+        <div *ngIf="isLoading" class="loading-state">
+            Loading your workouts...
+        </div>
+
+        <div *ngIf="!isLoading && workouts.length === 0" class="empty-state">
+            <h3>No workouts yet</h3>
+            <p>Your sessions will appear here after you save your first workout.</p>
+        </div>
+
+        <!-- MONTHLY CALENDAR -->
+        <div *ngIf="!isLoading && workouts.length > 0 && historyView === 'calendar'" class="calendar-panel">
+            <div class="calendar-heading">
+                <button type="button" class="calendar-nav" (click)="previousMonth()" aria-label="Previous month">
+                    ‹
+                </button>
+
+                <h3>{{ monthLabel }}</h3>
+
+                <button type="button" class="calendar-nav" (click)="nextMonth()" aria-label="Next month">
+                    ›
+                </button>
+
+                <button type="button" class="text-button calendar-today" (click)="goToCurrentMonth()">
+                    Today
+                </button>
+            </div>
+
+            <div class="calendar-grid calendar-weekdays">
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+                <span>Sun</span>
+            </div>
+
+            <div class="calendar-grid calendar-dates">
+                <button type="button" *ngFor="let day of calendarDays; trackBy: trackCalendarDay" class="calendar-day"
+                    [class.outside-month]="!day.inCurrentMonth" [class.has-workouts]="day.workouts.length > 0"
+                    [class.selected]="selectedCalendarDate === day.key" (click)="selectCalendarDate(day.key)">
+                    <span class="calendar-day-number">{{ day.date.getDate() }}</span>
+
+                    <span class="calendar-dots">
+                        <img *ngFor="let workout of day.workouts | slice:0:3"
+                            [src]="workout.workout_type === 'Running' ? '/assets/sneaker.png' : '/assets/dumbbell.png'"
+                            [class.running-dot]="workout.workout_type === 'Running'"
+                            [class.strength-dot]="workout.workout_type === 'Strength Training'"
+                            [alt]="workout.workout_type + ' session'">
+                    </span>
+
+                    <small *ngIf="day.workouts.length > 0">
+                        {{ day.workouts.length }}
+                        {{ day.workouts.length === 1 ? 'session' : 'sessions' }}
+                    </small>
+                </button>
+            </div>
+
+            <p class="calendar-hint">
+                Select a date to see its workouts. Select it again to clear the date filter.
+            </p>
+        </div>
+
+        <div *ngIf="!isLoading && workouts.length > 0 && filteredWorkouts.length === 0"
+            class="empty-state filtered-empty">
+            <h3>No matching workouts</h3>
+            <p>
+                {{ selectedCalendarDate
+                ? 'There are no workouts matching these filters on this date.'
+                : 'Try another filter to see your sessions.' }}
+            </p>
+        </div>
+
+        <!-- WORKOUT CARDS: SHOW FOUR AT A TIME -->
+        <div *ngIf="!isLoading && filteredWorkouts.length > 0 && historyView === 'list'" class="workout-list">
+          <section *ngFor="let group of visibleWorkoutGroups; trackBy: trackWorkoutGroup" class="month-group" [attr.aria-label]="group.label + ' workout history'">
+            <header class="month-group-heading">
+              <h3>{{ group.label }}</h3>
+            </header>
+            <div class="month-group-list">
+            <article
+                *ngFor="let workout of group.workouts; trackBy: trackWorkoutById"
+                class="workout-card"
+                [class.collapsed]="!isWorkoutExpanded(workout.id)"
+                [class.running-workout]="workout.workout_type === 'Running'"
+                [class.strength-workout]="workout.workout_type === 'Strength Training'">
+
+                <div class="workout-info">
+                    <div class="workout-title-row">
+                        <h3>{{ workout.workout_type }}</h3>
+
+                        <span class="workout-badge" [class.running-badge]="workout.workout_type === 'Running'"
+                            [class.strength-badge]="workout.workout_type === 'Strength Training'">
+                            {{ workout.workout_type === 'Running' ? 'RUNNING' : 'STRENGTH' }}
+                        </span>
+
+                        <button type="button" class="workout-expand-button" (click)="toggleWorkout(workout.id)"
+                            [attr.aria-expanded]="isWorkoutExpanded(workout.id)"
+                            [attr.aria-label]="(isWorkoutExpanded(workout.id) ? 'Collapse ' : 'Expand ') + workout.workout_type">
+                            <span>{{ isWorkoutExpanded(workout.id) ? '-' : '+' }}</span>
+                        </button>
+                    </div>
+
+                    <p class="workout-date">
+                        {{ formatDateForDisplay(workout.workout_date) }}
+                    </p>
+
+                    <div class="workout-meta">
+                        <span>
+                            <strong>{{ formatDuration(workout.duration_minutes) }}</strong>
+                        </span>
+                    </div>
+
+                    <!-- EXPANDED WORKOUT DETAILS -->
+                    <div *ngIf="isWorkoutExpanded(workout.id)" class="workout-expanded-content">
+
+                        <p *ngIf="workout.notes" class="workout-notes">
+                            {{ workout.notes }}
+                        </p>
+
+                        <!-- RUNNING METRICS -->
+                        <div *ngIf="workout.workout_type === 'Running' && workout.running" class="detail-grid">
+
+                            <div class="detail-chip">
+                                <span>Distance</span>
+                                <strong>{{ workout.running.distance_km | number:'1.0-2' }} km</strong>
+                            </div>
+                            
+<div class="detail-chip">
+    <span>Running time</span>
+    <strong>
+        <ng-container *ngIf="workout.running.running_duration_seconds != null; else noRunningTime">
+            {{ formatEstimatedDuration(workout.running.running_duration_seconds / 60) }}
+        </ng-container>
+        <ng-template #noRunningTime>—</ng-template>
+    </strong>
+</div>
+
+
+                            <div class="detail-chip">
+                                <span>Average pace</span>
+                                <strong>
+                                    <ng-container *ngIf="workout.running.avg_pace_seconds_per_km != null; else noPace">
+                                        {{ Math.floor(workout.running.avg_pace_seconds_per_km / 60) }}:{{
+                                        (Math.floor(workout.running.avg_pace_seconds_per_km %
+                                        60)).toString().padStart(2, '0') }} /km
+                                    </ng-container>
+                                    <ng-template #noPace>—</ng-template>
+                                </strong>
+                            </div>
+
+                            <div class="detail-chip" *ngIf="workout.running.avg_heart_rate != null">
+                                <span>Avg. heart rate</span>
+                                <strong>{{ workout.running.avg_heart_rate }} bpm</strong>
+                            </div>
+
+                            <div class="detail-chip" *ngIf="workout.running.elevation_gain_m != null">
+                                <span>Elevation gain</span>
+                                <strong>{{ workout.running.elevation_gain_m }} m</strong>
+                            </div>
+                        </div>
+
+                        <p *ngIf="workout.workout_type === 'Running' && !workout.running" class="detail-warning">
+                            Running details could not be loaded.
+                        </p>
+
+                        <!-- STRENGTH EXERCISES AND SETS -->
+                        <div *ngIf="workout.workout_type === 'Strength Training' && workout.exercises"
+                            class="history-exercises">
+
+                            <div *ngFor="let exercise of workout.exercises" class="history-exercise">
+
+                                <div class="history-exercise-heading">
+                                    <strong>{{ exercise.exercise_order }}. {{ exercise.exercise_name }}</strong>
+                                    <span *ngIf="exercise.muscle_group">{{ exercise.muscle_group }}</span>
+                                </div>
+
+                                <p *ngIf="exercise.notes" class="exercise-history-notes">
+                                    {{ exercise.notes }}
+                                </p>
+
+                                <div class="history-sets">
+                                    <span *ngFor="let set of exercise.sets" class="history-set">
+                                        <strong>Set {{ set.set_number }}</strong>
+
+                                        <ng-container *ngIf="set.reps != null">
+                                            {{ set.reps }} reps
+                                        </ng-container>
+
+                                        <ng-container *ngIf="set.weight_kg != null">
+                                            · {{ set.weight_kg }} kg
+                                        </ng-container>
+
+                                        <ng-container *ngIf="set.duration_minutes != null">
+                                            · {{ set.duration_minutes }} min
+                                        </ng-container>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p *ngIf="workout.workout_type === 'Strength Training' && !workout.exercises"
+                            class="detail-warning">
+                            Strength details could not be loaded.
+                        </p>
+
+                        <div class="workout-actions">
+                            <button type="button" class="edit-button" (click)="editWorkout(workout)">
+                                Edit
+                            </button>
+
+                            <button type="button" class="delete-button" (click)="deleteWorkout(workout)">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+            </div>
+          </section>
+        </div>
+
+        <div *ngIf="!isLoading && historyView === 'list' && visibleWorkoutCount < filteredWorkouts.length"
+            #loadMoreSentinel class="load-more-container" aria-live="polite">
+            <p>Showing {{ visibleWorkouts.length }} of {{ filteredWorkouts.length }} workouts</p>
+            <span>Scroll to load more workouts...</span>
+        </div>
+
+        <div *ngIf="!isLoading && historyView === 'list' && filteredWorkouts.length > 0 && visibleWorkoutCount >= filteredWorkouts.length"
+            class="load-more-container">
+            <p>You've reached the end of your workout history.</p>
+        </div>
+
+        <!-- SELECTED-DATE RESULTS IN CALENDAR MODE -->
+        <div *ngIf="!isLoading && historyView === 'calendar' && selectedCalendarDate && filteredWorkouts.length > 0"
+            class="calendar-results">
+
+            <h3>Workouts on {{ selectedCalendarDate }}</h3>
+
+            <article *ngFor="let workout of filteredWorkouts" class="calendar-workout-row">
+
+                <div>
+                    <strong>{{ workout.workout_type }}</strong>
+                    <span>{{ formatDuration(workout.duration_minutes) }}</span>
+                    <p *ngIf="workout.notes">{{ workout.notes }}</p>
+                </div>
+
+                <div class="workout-actions">
+                    <button type="button" class="edit-button" (click)="editWorkout(workout)">
+                        Edit
+                    </button>
+
+                    <button type="button" class="delete-button" (click)="deleteWorkout(workout)">
+                        Delete
+                    </button>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>

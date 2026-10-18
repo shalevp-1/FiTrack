@@ -1,0 +1,24 @@
+<div 
+  *ngIf="serverStarting"
+  class="backend-toast starting-toast"
+  role="status"
+  aria-live="polite">
+  <span class="loading-orbit" aria-hidden="true"></span>
+  <span >Server is starting up! This will take a few seconds.</span>
+</div>
+
+<div
+  *ngIf="showRecoveredNotice"
+  class="backend-toast recovered-toast"
+  role="status"
+  aria-live="polite">
+  <span class="confetti" aria-hidden="true">
+    <i
+      *ngFor="let piece of confettiPieces"
+      [style.left.%]="piece.left"
+      [style.animation-delay.s]="piece.delay">
+    </i>
+  </span>
+  <span class="recovered-icon" aria-hidden="true">✓</span>
+  <span>Server is back online</span>
+</div>
