@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomeComponent } from './home/home.component';
@@ -16,6 +16,7 @@ import { CheckoutComponent } from './checkout/checkout.component';
 import { MyOrdersComponent } from './my-orders/my-orders.component';
 import { CartDrawerComponent } from './cart-drawer/cart-drawer.component';
 import { BackendStatusComponent } from './backend-status/backend-status.component';
+import { ApiBaseUrlInterceptor } from './api-base-url.interceptor';
 
 
 
@@ -45,7 +46,13 @@ import { BackendStatusComponent } from './backend-status/backend-status.componen
     HttpClientModule
   ],
 
-  providers: [],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: ApiBaseUrlInterceptor,
+      multi: true
+    }
+  ],
 
   bootstrap: [AppComponent]
 })

@@ -13,7 +13,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: isProduction ? 'none' : 'lax',
     path: '/'
 };
 
@@ -34,7 +34,10 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(cookieParser());
 
-const allowedOrigins = (process.env.CLIENT_ORIGINS || 'http://localhost:4200')
+const allowedOrigins = (
+    process.env.CLIENT_ORIGINS ||
+    'http://localhost:4200,https://fitrackfitness.netlify.app'
+)
     .split(',')
     .map(origin => origin.trim())
     .filter(Boolean);
