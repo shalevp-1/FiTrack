@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { CommonModule } from '@angular/common';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { CheckoutComponent } from './checkout.component';
 
@@ -8,7 +11,8 @@ describe('CheckoutComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [CheckoutComponent]
+      declarations: [CheckoutComponent],
+      imports: [CommonModule, HttpClientTestingModule, RouterTestingModule]
     });
     fixture = TestBed.createComponent(CheckoutComponent);
     component = fixture.componentInstance;

@@ -114,7 +114,10 @@
         <label class="inventory-search">
           <span>Search products</span>
           <input
+            id="inventory-search"
+            name="inventorySearch"
             type="search"
+            autocomplete="off"
             [(ngModel)]="searchTerm"
             placeholder="Search by name">
         </label>

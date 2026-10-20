@@ -1,11 +1,24 @@
 import { TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { Component } from '@angular/core';
 import { AppComponent } from './app.component';
+
+@Component({ selector: 'app-router-main', template: '' })
+class RouterMainStubComponent {}
+
+@Component({ selector: 'app-cart-drawer', template: '' })
+class CartDrawerStubComponent {}
+
+@Component({ selector: 'app-backend-status', template: '' })
+class BackendStatusStubComponent {}
 
 describe('AppComponent', () => {
   beforeEach(() => TestBed.configureTestingModule({
-    imports: [RouterTestingModule],
-    declarations: [AppComponent]
+    declarations: [
+      AppComponent,
+      RouterMainStubComponent,
+      CartDrawerStubComponent,
+      BackendStatusStubComponent
+    ]
   }));
 
   it('should create the app', () => {
@@ -24,6 +37,8 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('frontend app is running!');
+    expect(compiled.querySelector('main app-router-main')).toBeTruthy();
+    expect(compiled.querySelector('main app-cart-drawer')).toBeTruthy();
+    expect(compiled.querySelector('main app-backend-status')).toBeTruthy();
   });
 });
