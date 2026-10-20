@@ -274,7 +274,7 @@
 .order-actions {
   display: flex;
   justify-content: flex-end;
-  padding: 0 24px 20px;
+  padding: 12px 24px 20px;
 }
 
 .details-button {

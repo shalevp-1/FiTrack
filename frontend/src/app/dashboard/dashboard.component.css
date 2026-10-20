@@ -332,6 +332,7 @@
 }
 
 .axis-label {
+  grid-row: 3;
   align-self: end;
   color: #c9c7dc;
   font-size: 10px;
