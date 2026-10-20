@@ -870,6 +870,8 @@ app.post('/api/login', async (req, res) => {
 
 // CHECK LOGIN
 app.get('/api/me', async (req, res) => {
+    res.set('Cache-Control', 'no-store');
+
     try {
         const token = req.cookies.token;
 
