@@ -6,11 +6,13 @@
 </div>
 
 <aside
+  #drawer
   class="cart-drawer"
   [class.cart-drawer-open]="cartDrawerOpen"
   [attr.aria-hidden]="!cartDrawerOpen"
+  [attr.aria-modal]="cartDrawerOpen ? 'true' : null"
+  [attr.inert]="cartDrawerOpen ? null : ''"
   role="dialog"
-  aria-modal="true"
   aria-label="Shopping cart">
 
   <div class="cart-drawer-header">
@@ -20,6 +22,7 @@
     </div>
 
     <button
+      #closeButton
       type="button"
       class="cart-drawer-close"
       (click)="closeCart()"

@@ -24,12 +24,13 @@
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.12);
   transform: translateX(100%);
   visibility: hidden;
-  transition: transform 0.28s ease, visibility 0.28s ease;
+  transition: transform 0.28s ease, visibility 0s linear 0.28s;
 }
 
 .cart-drawer-open {
   transform: translateX(0);
   visibility: visible;
+  transition: transform 0.28s ease, visibility 0s;
 }
 
 .cart-drawer-header {

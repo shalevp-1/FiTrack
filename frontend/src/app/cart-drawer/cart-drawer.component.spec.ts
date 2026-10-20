@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { BehaviorSubject, EMPTY } from 'rxjs';
@@ -11,16 +11,20 @@ describe('CartDrawerComponent', () => {
   let fixture: ComponentFixture<CartDrawerComponent>;
   let router: jasmine.SpyObj<Router>;
   let cartService: jasmine.SpyObj<CartService>;
+  let drawerOpenSubject: BehaviorSubject<boolean>;
+  let openerElement: HTMLButtonElement | null;
 
   beforeEach(() => {
+    openerElement = null;
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     Object.defineProperty(router, 'events', { value: EMPTY });
+    drawerOpenSubject = new BehaviorSubject(false);
     cartService = jasmine.createSpyObj<CartService>(
       'CartService',
       ['closeDrawer', 'updateQuantity', 'removeProduct', 'getItemCount', 'getSubtotal'],
       {
         items$: new BehaviorSubject([]),
-        drawerOpen$: new BehaviorSubject(false)
+        drawerOpen$: drawerOpenSubject
       }
     );
     cartService.getItemCount.and.returnValue(0);
@@ -39,6 +43,10 @@ describe('CartDrawerComponent', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    openerElement?.remove();
+  });
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
@@ -49,4 +57,53 @@ describe('CartDrawerComponent', () => {
     expect(cartService.closeDrawer).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/checkout']);
   });
+
+  it('exposes the dialog and moves focus into it when opened', fakeAsync(() => {
+    openerElement = document.createElement('button');
+    document.body.appendChild(openerElement);
+    openerElement.focus();
+
+    drawerOpenSubject.next(true);
+    fixture.detectChanges();
+    tick();
+
+    const drawer = fixture.nativeElement.querySelector('aside') as HTMLElement;
+    const closeButton = fixture.nativeElement.querySelector('.cart-drawer-close') as HTMLButtonElement;
+
+    expect(drawer.getAttribute('aria-hidden')).toBe('false');
+    expect(drawer.getAttribute('aria-modal')).toBe('true');
+    expect(drawer.hasAttribute('inert')).toBe(false);
+    expect(document.activeElement).toBe(closeButton);
+  }));
+
+  it('makes the closed drawer inert and restores focus to its opener', fakeAsync(() => {
+    openerElement = document.createElement('button');
+    document.body.appendChild(openerElement);
+    openerElement.focus();
+
+    drawerOpenSubject.next(true);
+    fixture.detectChanges();
+    tick();
+
+    drawerOpenSubject.next(false);
+    fixture.detectChanges();
+
+    const drawer = fixture.nativeElement.querySelector('aside') as HTMLElement;
+    expect(drawer.getAttribute('aria-hidden')).toBe('true');
+    expect(drawer.hasAttribute('aria-modal')).toBe(false);
+    expect(drawer.hasAttribute('inert')).toBe(true);
+    expect(document.activeElement).toBe(openerElement);
+  }));
+
+  it('closes the open drawer when Escape is pressed', fakeAsync(() => {
+    drawerOpenSubject.next(true);
+    fixture.detectChanges();
+    tick();
+
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+    document.dispatchEvent(escapeEvent);
+
+    expect(cartService.closeDrawer).toHaveBeenCalled();
+    expect(escapeEvent.defaultPrevented).toBe(true);
+  }));
 });
