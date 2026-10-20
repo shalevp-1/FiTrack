@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { CartService } from '../services/cart.service';
 
@@ -20,8 +20,14 @@ export class LoginComponent {
     private http: HttpClient,
     private authService: AuthService,
     private router: Router,
-    private cartService: CartService
-  ) {}
+    private cartService: CartService,
+    route: ActivatedRoute
+  ) {
+    if (route.snapshot.queryParamMap.get('authCheck') === 'failed') {
+      this.errorMessage =
+        'We could not verify your session. Please sign in again.';
+    }
+  }
 
   login(): void {
     this.errorMessage = '';

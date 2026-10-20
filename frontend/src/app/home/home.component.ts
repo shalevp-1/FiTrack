@@ -24,6 +24,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private revealObserver: IntersectionObserver | null = null;
   private revealChangesSubscription: Subscription | null = null;
+  private loginStatusSubscription: Subscription | null = null;
 
   constructor(private authService: AuthService) {}
 
@@ -31,9 +32,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.checkLogin();
 
-    this.authService.loginStatus$.subscribe((loggedIn) => {
-      this.isLoggedIn = loggedIn;
-    });
+    this.loginStatusSubscription = this.authService.loginStatus$.subscribe(
+      loggedIn => {
+        this.isLoggedIn = loggedIn;
+      }
+    );
   }
 
   ngAfterViewInit(): void {
@@ -45,6 +48,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.revealObserver?.disconnect();
     this.revealChangesSubscription?.unsubscribe();
+    this.loginStatusSubscription?.unsubscribe();
   }
 
   private observeRevealElements(): void {
