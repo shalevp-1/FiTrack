@@ -10,7 +10,7 @@
       rgba(23, 25, 45, 0.58) 48%,
       rgba(23, 25, 45, 0.18) 100%
     ),
-    url('/assets/running-6.png') 68% center / cover no-repeat;
+    url('/assets/running-6.webp') 68% center / cover no-repeat;
   color: #fff;
   animation: contact-enter 700ms ease-out both;
 }
@@ -117,7 +117,7 @@
         rgba(23, 25, 45, 0.66),
         rgba(23, 25, 45, 0.76)
       ),
-      url('/assets/running-6.png') 60% center / cover no-repeat;
+      url('/assets/running-6.webp') 60% center / cover no-repeat;
   }
 
   .contact-page h1 {

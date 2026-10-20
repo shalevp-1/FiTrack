@@ -31,7 +31,7 @@
   overflow: hidden;
   background:
     linear-gradient(90deg, #191a31 0%, #242342ed 46%, #2423424d 100%),
-    url('/assets/running-4.png') right center / 60% auto no-repeat,
+    url('/assets/running-4.webp') right center / 60% auto no-repeat,
     #191a31;
   color: #fff;
 }
@@ -508,11 +508,11 @@
 }
 
 .running-workout {
-  --workout-photo: url('/assets/running-5.png');
+  --workout-photo: url('/assets/running-5.webp');
 }
 
 .strength-workout {
-  --workout-photo: url('/assets/gym-3.png');
+  --workout-photo: url('/assets/gym-3.webp');
 }
 
 .workout-card:hover {
@@ -1019,7 +1019,7 @@
     padding: 96px 25px 25px;
     background:
       linear-gradient(90deg, #191a31f5 0%, #242342d9 65%, #24234273 100%),
-      url('/assets/running-4.png') right center / cover no-repeat,
+      url('/assets/running-4.webp') right center / cover no-repeat,
       #191a31;
   }
 

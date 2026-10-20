@@ -25,7 +25,7 @@
   padding: 112px max(28px, calc((100vw - 1240px) / 2)) 72px;
   overflow: hidden;
   color: #fff;
-  background: #17192b url('/assets/running-2.png') center 43% / cover no-repeat;
+  background: #17192b url('/assets/running-2.webp') center 43% / cover no-repeat;
 }
 
 .hero-shade {
@@ -385,13 +385,13 @@
 .running-summary {
   background:
     linear-gradient(90deg, #0c0f1ee0, #0c0f1e9e 55%, #0c0f1ec7),
-    url('/assets/running-3.png') center 48% / cover no-repeat;
+    url('/assets/running-3.webp') center 48% / cover no-repeat;
 }
 
 .strength-summary {
   background:
     linear-gradient(90deg, #0c0f1ee0, #0c0f1e9e 55%, #0c0f1ec7),
-    url('/assets/gym-2.png') center 48% / cover no-repeat;
+    url('/assets/gym-2.webp') center 48% / cover no-repeat;
 }
 
 .discipline-content {

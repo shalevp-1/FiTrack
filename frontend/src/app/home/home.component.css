@@ -7,7 +7,7 @@
   overflow: hidden;
   background:
     linear-gradient(90deg, #17192df2 0%, #17192dd9 35%, #17192d78 64%, #17192d12 100%),
-    url('/assets/running-1.png') 68% 48% / cover no-repeat;
+    url('/assets/running-1.webp') 68% 48% / cover no-repeat;
 }
 
 .home-content {
@@ -196,7 +196,7 @@
     padding: 108px 24px 68px;
     background:
       linear-gradient(90deg, #17192de8, #17192da3),
-      url('/assets/running-1.png') 60% center / cover no-repeat;
+      url('/assets/running-1.webp') 60% center / cover no-repeat;
   }
 
   .home-content {
@@ -210,7 +210,7 @@
     padding: 98px 20px 58px;
     background:
       linear-gradient(90deg, #17192df0, #17192db3),
-      url('/assets/running-1.png') 58% center / cover no-repeat;
+      url('/assets/running-1.webp') 58% center / cover no-repeat;
   }
 
   .home h1 {
