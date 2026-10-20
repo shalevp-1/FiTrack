@@ -35,6 +35,32 @@ interface DashboardCalendarDay {
   workouts: WorkoutDetails[];
 }
 
+interface StrengthWeekDay {
+  label: string;
+  completed: boolean;
+}
+
+interface MonthlyChartPoint {
+  day: number;
+  value: number;
+  x: number;
+  y: number;
+}
+
+interface MonthlyProgressChart {
+  width: number;
+  height: number;
+  plotLeft: number;
+  plotRight: number;
+  plotTop: number;
+  baseline: number;
+  maxValue: number;
+  ticks: number[];
+  points: MonthlyChartPoint[];
+  linePath: string;
+  areaPath: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -47,7 +73,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   errorMessage = '';
   selectedPeriod: ActivityPeriod = 'weekly';
   readonly periodOptions: ActivityPeriodOption[] = [
-    { value: 'daily', label: 'Day', title: 'Today' },
     { value: 'weekly', label: 'Week', title: 'This week' },
     { value: 'monthly', label: 'Month', title: 'This month' },
     { value: 'yearly', label: 'Year', title: 'This year' }
@@ -96,7 +121,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -35px 0px' }
+      { threshold: 0.12, rootMargin: '250px 0px 0px 0px' }
     );
 
     this.scrollRevealElements.forEach(item => {
@@ -213,6 +238,152 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
+  get currentMonthLabel(): string {
+    return new Date().toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  get monthlyRunningChart(): MonthlyProgressChart {
+    const values = Array.from({ length: this.currentMonthDays }, () => 0);
+
+    this.workouts.forEach(workout => {
+      const date = this.parseDate(workout.workout_date);
+      const distance = Number(workout.running?.distance_km || 0);
+      if (
+        workout.workout_type === 'Running' &&
+        date &&
+        date.getFullYear() === new Date().getFullYear() &&
+        date.getMonth() === new Date().getMonth() &&
+        Number.isFinite(distance) &&
+        distance > 0
+      ) {
+        values[date.getDate() - 1] += distance;
+      }
+    });
+
+    let cumulativeDistance = 0;
+    const cumulativeValues = values.map(distance => {
+      cumulativeDistance += distance;
+      return cumulativeDistance;
+    });
+
+    const visibleDays = new Date().getDate();
+    return this.createMonthlyChart(
+      cumulativeValues.slice(0, visibleDays),
+      values.length
+    );
+  }
+
+  get weeklyStrengthDays(): StrengthWeekDay[] {
+    const today = new Date();
+    const sunday = this.startOfDay(today);
+    sunday.setDate(sunday.getDate() - sunday.getDay());
+    const todayKey = this.calendarDateKey(today);
+
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(sunday);
+      date.setDate(sunday.getDate() + index);
+      const dateKey = this.calendarDateKey(date);
+      return {
+        label: date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
+        completed: dateKey <= todayKey && this.strengthWorkouts.some(
+          workout => this.calendarDateKey(this.parseDate(workout.workout_date)) === dateKey
+        )
+      };
+    });
+  }
+
+  get weeklyStrengthSessionCount(): number {
+    const today = new Date();
+    const sunday = this.startOfDay(today);
+    sunday.setDate(sunday.getDate() - sunday.getDay());
+    const sundayKey = this.calendarDateKey(sunday);
+    const todayKey = this.calendarDateKey(today);
+
+    return this.strengthWorkouts.filter(workout => {
+      const date = this.parseDate(workout.workout_date);
+      const dateKey = this.calendarDateKey(date);
+      return !!date && dateKey >= sundayKey && dateKey <= todayKey;
+    }).length;
+  }
+
+  private get currentMonthDays(): number {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  }
+
+  private createMonthlyChart(
+    values: number[],
+    axisDays = values.length
+  ): MonthlyProgressChart {
+    const width = 960;
+    const height = 250;
+    const plotLeft = 54;
+    const plotRight = 944;
+    const plotTop = 20;
+    const baseline = 205;
+    const largestValue = Math.max(...values, 0);
+    const rawStep = largestValue > 0 ? largestValue / 4 : 1;
+    const stepMagnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const normalizedStep = rawStep / stepMagnitude;
+    const stepFactor = normalizedStep <= 1
+      ? 1
+      : normalizedStep <= 2
+        ? 2
+        : normalizedStep <= 2.5
+          ? 2.5
+          : normalizedStep <= 5
+            ? 5
+            : 10;
+    const tickStep = stepFactor * stepMagnitude;
+    const maxValue = Math.max(
+      tickStep,
+      Math.ceil(largestValue / tickStep) * tickStep
+    );
+    const plotHeight = baseline - plotTop;
+    const ticks = Array.from(
+      { length: Math.round(maxValue / tickStep) + 1 },
+      (_, index) => index * tickStep
+    );
+    const points = values.map((value, index) => {
+      const x = plotLeft +
+        (index / Math.max(axisDays - 1, 1)) * (plotRight - plotLeft);
+      return {
+        day: index + 1,
+        value,
+        x,
+        y: baseline - (value / maxValue) * plotHeight
+      };
+    });
+    const firstPoint = points[0];
+    const lastPoint = points[points.length - 1];
+    let linePath = `M ${firstPoint.x} ${firstPoint.y}`;
+
+    for (let index = 1; index < points.length; index += 1) {
+      linePath += ` H ${points[index].x} V ${points[index].y}`;
+    }
+
+    const areaPath =
+      `${linePath} L ${lastPoint.x} ${baseline} ` +
+      `L ${firstPoint.x} ${baseline} Z`;
+
+    return {
+      width,
+      height,
+      plotLeft,
+      plotRight,
+      plotTop,
+      baseline,
+      maxValue,
+      ticks,
+      points,
+      linePath,
+      areaPath
+    };
+  }
+
   get totalSets(): number {
     return this.strengthWorkouts.reduce((total, workout) => {
       return total + (workout.exercises || []).reduce(
@@ -249,8 +420,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         const date = new Date(today);
         date.setHours(hour);
         buckets.push({
-          label: hour % 3 === 0
-            ? date.toLocaleTimeString('en-US', { hour: 'numeric' }).toLowerCase()
+          label: hour % 6 === 0
+            ? date.toLocaleTimeString('en-US', { hour: 'numeric' })
+              .replace(' AM', 'a')
+              .replace(' PM', 'p')
             : '',
           minutes: 0,
           count: 0,
@@ -271,22 +444,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     } else if (this.selectedPeriod === 'monthly') {
-      const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const firstWeekdayOffset = (firstOfMonth.getDay() + 6) % 7;
       const daysInMonth = new Date(
         today.getFullYear(),
         today.getMonth() + 1,
         0
       ).getDate();
-      const weekCount = Math.ceil((firstWeekdayOffset + daysInMonth) / 7);
-      for (let week = 0; week < weekCount; week += 1) {
-        const firstDay = Math.max(1, week * 7 + 1 - firstWeekdayOffset);
-        const lastDay = Math.min(
-          daysInMonth,
-          (week + 1) * 7 - firstWeekdayOffset
-        );
+      for (let day = 1; day <= daysInMonth; day += 1) {
         buckets.push({
-          label: `${firstDay}–${lastDay}`,
+          label: String(day),
           minutes: 0,
           count: 0,
           runningMinutes: 0,
@@ -322,13 +487,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           (this.calendarDayNumber(date) - this.calendarDayNumber(this.periodStart)) /
             86400000
         );
-        const monthWeekOffset = (new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          1
-        ).getDay() + 6) % 7;
         key = String(this.selectedPeriod === 'monthly'
-          ? Math.floor((date.getDate() - 1 + monthWeekOffset) / 7)
+          ? date.getDate() - 1
           : dayOffset);
       }
 

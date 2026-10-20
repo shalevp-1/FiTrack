@@ -845,13 +845,13 @@ app.post('/api/login', async (req, res) => {
             },
             process.env.JWT_SECRET,
             {
-                expiresIn: '1h'
+                expiresIn: '2h'
             }
         );
 
         res.cookie('token', token, {
             ...cookieOptions,
-            maxAge: 60 * 60 * 1000
+            maxAge: 2 * 60 * 60 * 1000
         });
 
         res.json({

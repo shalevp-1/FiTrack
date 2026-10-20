@@ -352,114 +352,153 @@ svg {
   color: #b93649;
 }
 
-.workouts-page .calendar-dates {
-  gap: 1px;
-  padding: 1px;
-  overflow: hidden;
-  border: 1px solid #e1e2eb;
-  border-radius: 14px;
-  background: #e1e2eb;
-}
-
-.workouts-page .calendar-day {
-  display: flex;
-  min-width: 0;
-  min-height: 96px;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 4px;
-  border: 0;
-  border-radius: 0;
-  background: #fff;
-  color: #393b55;
-  text-align: center;
-  transition: background-color 160ms ease, transform 160ms ease;
-}
-
-.workouts-page .calendar-day:hover {
-  transform: translateY(-1px);
-  background: #f3f2fa;
-}
-
-.workouts-page .calendar-day.outside-month {
-  color: #b4b5c4;
-  opacity: 0.55;
-}
-
-.workouts-page .calendar-day.selected {
-  background: #eeecff;
-  box-shadow: inset 0 0 0 1px #c9c3fb;
-}
-
-.workouts-page .calendar-day-number {
-  display: grid;
-  width: 30px;
-  height: 30px;
-  place-items: center;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.workouts-page .calendar-day.has-workouts .calendar-day-number {
-  background: #f0eff8;
-}
-
-.workouts-page .calendar-day.selected .calendar-day-number {
-  background: #7465e8;
-  color: #fff;
-}
-
-.workouts-page .calendar-dots {
-  display: flex;
-  min-height: 20px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 3px;
-}
-
-.workouts-page .calendar-dots img {
-  width: 22px;
-  height: 22px;
-  padding: 2px;
-  border-radius: 6px;
-  object-fit: contain;
-}
-
-.workouts-page .calendar-dots img.running-dot {
-  background: #e0f5e8;
-}
-
-.workouts-page .calendar-dots img.strength-dot {
-  background: #ffe7e9;
-}
-
-.workouts-page .calendar-day small {
-  color: #777b92;
-  font-size: 9px;
-}
-
 @media (max-width: 760px) {
   .workouts-page .month-group-heading {
     align-items: center;
     flex-direction: row;
     gap: 10px;
   }
+}
 
-  .workouts-page .calendar-day {
-    min-height: 75px;
-    gap: 6px;
-    padding: 8px 2px;
+.dashboard-page .activity-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+  color: #e5e4f2;
+  font-size: 11px;
+}
+
+.dashboard-page .activity-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dashboard-page .running-legend-swatch,
+.dashboard-page .strength-legend-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: #54d6a1;
+  box-shadow: 0 0 10px rgb(84 214 161 / 36%);
+}
+
+.dashboard-page .strength-legend-swatch {
+  background: #e2454a;
+  box-shadow: 0 0 10px rgb(226 69 74 / 42%);
+}
+
+.dashboard-page .strength-segment {
+  background: linear-gradient(180deg, #f07b7f, #e2454a);
+}
+
+.dashboard-page .hourly-chart {
+  min-width: 720px;
+  gap: 5px;
+}
+
+.dashboard-page .hourly-chart .bar-fill {
+  width: min(72%, 18px);
+}
+
+.dashboard-page .running-summary {
+  margin-bottom: 24px;
+}
+
+.dashboard-page .running-chart-line {
+  filter: drop-shadow(0 0 4px #68dfb0);
+}
+
+.dashboard-page .weekly-strength {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  margin: 12px 0 18px;
+  padding: 24px 28px;
+  border-radius: 16px;
+  background: #0c0f1e9e;
+}
+
+.dashboard-page .weekly-strength-heading {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.dashboard-page .strength-breakdown-heading {
+  margin-bottom: 56px;
+}
+
+.dashboard-page .weekly-strength-heading h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+}
+
+.dashboard-page .weekly-strength-heading strong {
+  color: #ffffffb8;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.dashboard-page .strength-week-days {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+
+.dashboard-page .strength-week-day {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+}
+
+.dashboard-page .strength-week-square {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 6px;
+  background: #ffffff29;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.dashboard-page .strength-week-square.completed {
+  background: #36b983;
+}
+
+.dashboard-page .strength-week-day small {
+  color: #ffffffa8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .dashboard-page .strength-breakdown-heading {
+    margin-bottom: 42px;
   }
 
-  .workouts-page .calendar-day small {
-    display: none;
+  .dashboard-page .weekly-strength {
+    gap: 16px;
+    padding: 20px 16px;
   }
 
-  .workouts-page .calendar-dots img {
-    width: 18px;
-    height: 18px;
+  .dashboard-page .strength-week-days {
+    justify-content: space-between;
+    width: 100%;
+    gap: 4px;
+  }
+
+  .dashboard-page .strength-week-square {
+    width: clamp(36px, 10vw, 46px);
+    height: clamp(36px, 10vw, 46px);
+  }
+
+  .dashboard-page .strength-week-days {
+    gap: 3px;
   }
 }

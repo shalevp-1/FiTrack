@@ -32,30 +32,36 @@
           <div><strong>{{ periodDistanceKm | number:'1.0-1' }} km</strong><span>distance</span></div>
         </div>
 
-        <div
-          class="activity-chart"
-          [class.hourly-chart]="selectedPeriod === 'daily'"
-          [class.monthly-chart]="selectedPeriod === 'monthly'"
-          [class.yearly-chart]="selectedPeriod === 'yearly'"
-          [style.--chart-columns]="activityChart.length"
-          role="img"
-          [attr.aria-label]="periodTitle + ': ' + periodTotalMinutes + ' training minutes across ' + periodTotalWorkouts + ' workouts.'">
-          <div *ngFor="let bucket of activityChart" class="chart-column">
-            <span class="bar-value">{{ bucket.minutes ? formatChartDuration(bucket.minutes) : '' }}</span>
-            <div class="bar-track">
-              <div
-                class="bar-fill"
-                [class.has-activity]="bucket.minutes > 0"
-                [style.height.%]="bucket.height"
-                [title]="bucket.minutes + ' minutes, ' + bucket.count + (bucket.count === 1 ? ' workout' : ' workouts')">
-                <span class="bar-segment running-segment" [style.height.%]="bucket.minutes ? bucket.runningMinutes / bucket.minutes * 100 : 0"></span>
-                <span class="bar-segment strength-segment" [style.height.%]="bucket.minutes ? bucket.strengthMinutes / bucket.minutes * 100 : 0"></span>
+        <div class="activity-chart-viewport" tabindex="0" aria-label="Scrollable activity chart">
+          <div
+            class="activity-chart"
+            [class.hourly-chart]="selectedPeriod === 'daily'"
+            [class.monthly-chart]="selectedPeriod === 'monthly'"
+            [class.yearly-chart]="selectedPeriod === 'yearly'"
+            [style.--chart-columns]="activityChart.length"
+            role="img"
+            [attr.aria-label]="periodTitle + ': ' + periodTotalMinutes + ' training minutes across ' + periodTotalWorkouts + ' workouts.'">
+            <div *ngFor="let bucket of activityChart" class="chart-column">
+              <span class="bar-value">{{ bucket.minutes && selectedPeriod !== 'monthly' ? formatChartDuration(bucket.minutes) : '' }}</span>
+              <div *ngIf="bucket.minutes > 0" class="bar-track">
+                <div
+                  class="bar-fill"
+                  [class.has-activity]="bucket.minutes > 0"
+                  [style.height.%]="bucket.height"
+                  [title]="bucket.label + ': ' + bucket.minutes + ' minutes, ' + bucket.count + (bucket.count === 1 ? ' workout' : ' workouts')">
+                  <span class="bar-segment running-segment" [style.height.%]="bucket.minutes ? bucket.runningMinutes / bucket.minutes * 100 : 0"></span>
+                  <span class="bar-segment strength-segment" [style.height.%]="bucket.minutes ? bucket.strengthMinutes / bucket.minutes * 100 : 0"></span>
+                </div>
               </div>
+              <span class="axis-label">{{ bucket.label }}</span>
             </div>
-            <span class="axis-label">{{ bucket.label }}</span>
           </div>
         </div>
         <p class="chart-caption">Training minutes · {{ periodTitle.toLowerCase() }}</p>
+        <div class="activity-legend" aria-label="Workout types">
+          <span><i class="running-legend-swatch"></i> Running</span>
+          <span><i class="strength-legend-swatch"></i> Strength</span>
+        </div>
       </section>
     </div>
   </section>
@@ -75,34 +81,123 @@
       </div>
 
       <section class="discipline-section running-summary scroll-reveal" #scrollReveal aria-labelledby="running-title">
-        <div class="discipline-shade"></div>
         <div class="discipline-content">
-          <h2 id="running-title">Running</h2>
-          <p class="discipline-description">One step at a time, you’re building endurance and going further.</p>
+          <div class="discipline-heading">
+            <div>
+              <h2 id="running-title">Running</h2>
+            </div>
+            <a routerLink="/workouts" class="text-link">View workouts <span aria-hidden="true">↗</span></a>
+          </div>
           <div class="discipline-metrics">
-            <div><strong>{{ runningWorkouts.length }}</strong><span>all-time sessions</span></div>
-            <div><strong>{{ totalDistanceKm | number:'1.0-2' }} km</strong><span>all-time distance</span></div>
-            <div><strong>{{ formatDuration(totalRunningMinutes) }}</strong><span>all-time time running</span></div>
-            <div class="longest-run-metric">
+            <div class="discipline-metric">
+              <strong>{{ runningWorkouts.length }}</strong><span>All-time sessions</span>
+            </div>
+            <div class="discipline-metric">
+              <strong>{{ totalDistanceKm | number:'1.0-2' }} km</strong><span>All-time distance</span>
+            </div>
+            <div class="discipline-metric">
+              <strong>{{ formatDuration(totalRunningMinutes) }}</strong><span>Time running</span>
+            </div>
+            <div class="discipline-metric">
               <strong>{{ longestRun ? (longestRun.running!.distance_km | number:'1.0-2') + ' km' : '—' }}</strong>
-              <span>longest run · {{ formatPace(longestRun?.running?.avg_pace_seconds_per_km) }}/km</span>
+              <span>Longest run · {{ formatPace(longestRun?.running?.avg_pace_seconds_per_km) }}/km</span>
             </div>
           </div>
-          <a routerLink="/workouts" class="text-link">View your workouts <span aria-hidden="true">↗</span></a>
+          <div class="discipline-chart-card">
+            <div class="discipline-chart-heading">
+              <div>
+                <h3>Monthly Running Distance</h3>
+              </div>
+              <span>{{ currentMonthLabel }}</span>
+            </div>
+            <div class="discipline-chart-scroll" tabindex="0" aria-label="Scrollable monthly running chart">
+              <svg
+                [attr.viewBox]="'0 0 ' + monthlyRunningChart.width + ' ' + monthlyRunningChart.height"
+                role="img"
+                [attr.aria-label]="'Cumulative running distance in kilometers for ' + currentMonthLabel">
+                <defs>
+                  <linearGradient id="running-area-gradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#51bc91" stop-opacity="0.24"></stop>
+                    <stop offset="100%" stop-color="#51bc91" stop-opacity="0.02"></stop>
+                  </linearGradient>
+                </defs>
+                <g class="discipline-chart-grid">
+                  <ng-container *ngFor="let tick of monthlyRunningChart.ticks">
+                    <line
+                      [attr.x1]="monthlyRunningChart.plotLeft"
+                      [attr.x2]="monthlyRunningChart.plotRight"
+                      [attr.y1]="monthlyRunningChart.baseline - (tick / monthlyRunningChart.maxValue) * (monthlyRunningChart.baseline - monthlyRunningChart.plotTop)"
+                      [attr.y2]="monthlyRunningChart.baseline - (tick / monthlyRunningChart.maxValue) * (monthlyRunningChart.baseline - monthlyRunningChart.plotTop)">
+                    </line>
+                    <text
+                      [attr.x]="monthlyRunningChart.plotLeft - 10"
+                      [attr.y]="monthlyRunningChart.baseline - (tick / monthlyRunningChart.maxValue) * (monthlyRunningChart.baseline - monthlyRunningChart.plotTop) + 4"
+                      text-anchor="end">{{ tick | number:'1.0-1' }}</text>
+                  </ng-container>
+                </g>
+                <path class="running-chart-area" [attr.d]="monthlyRunningChart.areaPath"></path>
+                <path class="running-chart-line" [attr.d]="monthlyRunningChart.linePath"></path>
+                <circle
+                  [attr.cx]="monthlyRunningChart.points[monthlyRunningChart.points.length - 1].x"
+                  [attr.cy]="monthlyRunningChart.points[monthlyRunningChart.points.length - 1].y"
+                  r="4"
+                  class="running-chart-point">
+                </circle>
+                <text
+                  *ngFor="let point of monthlyRunningChart.points"
+                  [attr.x]="point.x"
+                  y="232"
+                  text-anchor="middle"
+                  class="discipline-chart-day">{{ point.day }}</text>
+              </svg>
+            </div>
+            <div class="discipline-chart-legend">
+              <span><i class="running-legend-dot"></i> Distance in km</span>
+              <strong>{{ monthlyRunningChart.points[monthlyRunningChart.points.length - 1].value | number:'1.0-2' }} km this month</strong>
+            </div>
+          </div>
         </div>
       </section>
 
+
+      <div class="breakdown-heading strength-breakdown-heading scroll-reveal" #scrollReveal>
+        <h2>Every step counts</h2>
+      </div>
+
       <section class="discipline-section strength-summary scroll-reveal" #scrollReveal aria-labelledby="strength-title">
-        <div class="discipline-shade"></div>
         <div class="discipline-content">
-          <h2 id="strength-title">Strength</h2>
-          <p class="discipline-description">Showing up consistently is how strength gets made.</p>
-          <div class="discipline-metrics">
-            <div><strong>{{ strengthWorkouts.length }}</strong><span>all-time sessions</span></div>
-            <div><strong>{{ totalSets }}</strong><span>all-time sets completed</span></div>
-            <div><strong>{{ formatDuration(totalStrengthMinutes) }}</strong><span>all-time time training</span></div>
+          <div class="discipline-heading">
+            <div>
+              <p class="eyebrow">STRENGTH · MONTHLY PROGRESS</p>
+              <h2 id="strength-title">Strength</h2>
+              <p class="discipline-description">Track your training consistency one day and one set at a time.</p>
+            </div>
+            <a routerLink="/workouts" class="text-link">View workouts <span aria-hidden="true">↗</span></a>
           </div>
-          <a routerLink="/workouts" class="text-link">View your workouts <span aria-hidden="true">↗</span></a>
+          <div class="discipline-metrics">
+            <div class="discipline-metric"><strong>{{ strengthWorkouts.length }}</strong><span>All-time sessions</span></div>
+            <div class="discipline-metric"><strong>{{ totalSets }}</strong><span>All-time sets</span></div>
+            <div class="discipline-metric"><strong>{{ formatDuration(totalStrengthMinutes) }}</strong><span>Time training</span></div>
+          </div>
+          <div class="weekly-strength">
+            <div class="weekly-strength-heading">
+              <h3>Strength Sessions This Week</h3>
+              <strong>{{ weeklyStrengthSessionCount }} {{ weeklyStrengthSessionCount === 1 ? 'session' : 'sessions' }} this week</strong>
+            </div>
+            <div class="strength-week-days">
+              <div
+                *ngFor="let day of weeklyStrengthDays"
+                class="strength-week-day"
+                role="img"
+                [attr.aria-label]="day.label + (day.completed ? ': strength workout completed' : ': no strength workout')">
+                <span class="strength-week-square" [class.completed]="day.completed">
+                  <span *ngIf="day.completed" aria-hidden="true">✓</span>
+                </span>
+                <small>{{ day.label }}</small>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
