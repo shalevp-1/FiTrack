@@ -40,13 +40,14 @@ Workout summaries and visualizations give users an overview of their training ac
 
 ### Workout tracking
 
-Create and manage running and strength sessions, including workout-specific metrics and exercise sets.
+- **Workout tracking:** Create, view, edit, and delete running and strength workouts, including workout-specific metrics and exercise sets.
+- **Workout history and calendar:** Review workout details on the dashboard and explore training sessions in a dedicated calendar.
 
 ![FiTrack workout tracking demo](docs/Workouts.gif)
 
 ### Admin inventory
 
-Administrators can manage product details and stock. Restocking updates the existing product; it does not create a duplicate.
+Administrators can add, update, and delete products, manage inventory levels, and restock existing products without creating duplicates.
 
 ![FiTrack inventory restocking demo](<docs/Admin restock.gif>)
 
