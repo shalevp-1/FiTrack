@@ -251,6 +251,7 @@ tbody tr:hover {
 .inventory-table-wrapper {
   border: 1px solid #30353b;
   border-radius: 8px;
+  overflow-x: auto;
 }
 
 .stock-badge {
@@ -453,12 +454,6 @@ tbody tr:hover {
   margin-top: 20px;
 }
 
-@media (max-width: 1000px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 600px) {
   .admin-page {
     padding: 20px 14px;
@@ -469,15 +464,22 @@ tbody tr:hover {
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
-  .orders-section {
+  .stat-card {
     padding: 16px;
   }
 
+  .stat-card h2 {
+    font-size: 24px;
+    overflow-wrap: anywhere;
+  }
+
+  .orders-section,
   .inventory-section {
-    padding: 16px;
+    padding: 16px 12px;
   }
 
   .inventory-heading,
@@ -488,13 +490,37 @@ tbody tr:hover {
 
   .inventory-heading-actions {
     justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .inventory-search {
     max-width: none;
+    width: 100%;
   }
 
   .inventory-filters {
     justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .inventory-filters button {
+    padding: 9px 10px;
+  }
+
+  .product-number-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .product-editor-modal {
+    width: min(620px, 100%);
+    max-height: 85vh;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .restock-modal {
+    max-height: 85vh;
+    overflow-y: auto;
   }
 }

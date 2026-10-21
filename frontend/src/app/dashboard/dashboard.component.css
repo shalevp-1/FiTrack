@@ -517,17 +517,22 @@
   white-space: nowrap;
 }
 
+
 .discipline-chart-scroll {
+  width: 100%;
+  min-width: 0;
   margin-top: 12px;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .discipline-chart-scroll svg {
+  display: block;
   width: 100%;
-  min-width: 960px;
+  min-width: 0;
   height: auto;
-  overflow: visible;
+  overflow: hidden;
 }
+
 
 .discipline-chart-grid line {
   stroke: #ffffff2b;
