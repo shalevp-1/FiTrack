@@ -760,12 +760,12 @@ app.post('/api/users', async (req, res) => {
         }
 
         if (
-            password.length < 8 ||
+            password.length < 3 ||
             password.length > 128 ||
             Buffer.byteLength(password, 'utf8') > 72
         ) {
             return res.status(400).json({
-                message: 'Password must be 8 or more characters and no more than 72 bytes'
+                message: 'Password must be 3–128 characters'
             });
         }
 
