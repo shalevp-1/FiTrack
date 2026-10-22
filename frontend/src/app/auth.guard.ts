@@ -21,13 +21,14 @@ export class AuthGuard implements CanActivate {
           return true;
         }
 
-        alert('Access denied. Please log in first.');
-        return this.router.createUrlTree(['/login']);
+        return this.router.createUrlTree(['/login'], {
+          queryParams: { returnUrl: this.router.url }
+        });
       }),
       catchError(error => {
         console.error('Could not verify authentication for protected route:', error);
         return of(this.router.createUrlTree(['/login'], {
-          queryParams: { authCheck: 'failed' }
+          queryParams: { authCheck: 'failed', returnUrl: this.router.url }
         }));
       })
     );

@@ -32,15 +32,12 @@ describe('AuthGuard', () => {
   });
 
   it('redirects unauthenticated users to login', done => {
-    spyOn(window, 'alert').and.stub();
     checkLogin.and.returnValue(of(false));
 
     guard.canActivate().subscribe(result => {
       expect(result instanceof UrlTree).toBeTrue();
-      expect(router.serializeUrl(result as UrlTree)).toBe('/login');
-      expect(window.alert).toHaveBeenCalledWith(
-        'Access denied. Please log in first.'
-      );
+      expect(router.serializeUrl(result as UrlTree))
+        .toBe('/login?returnUrl=%2F');
       done();
     });
   });
@@ -52,7 +49,7 @@ describe('AuthGuard', () => {
     guard.canActivate().subscribe(result => {
       expect(result instanceof UrlTree).toBeTrue();
       expect(router.serializeUrl(result as UrlTree))
-        .toBe('/login?authCheck=failed');
+        .toBe('/login?authCheck=failed&returnUrl=%2F');
       expect(console.error).toHaveBeenCalled();
       done();
     });

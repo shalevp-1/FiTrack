@@ -12,6 +12,7 @@ import { CartService } from '../services/cart.service';
 export class LoginComponent {
   loginValue = '';
   password = '';
+  private returnUrl = '/dashboard';
 
   errorMessage = '';
   successMessage = '';
@@ -23,6 +24,10 @@ export class LoginComponent {
     private cartService: CartService,
     route: ActivatedRoute
   ) {
+    const requestedUrl = route.snapshot.queryParamMap.get('returnUrl');
+    if (requestedUrl?.startsWith('/') && !requestedUrl.startsWith('//')) {
+      this.returnUrl = requestedUrl;
+    }
     if (route.snapshot.queryParamMap.get('authCheck') === 'failed') {
       this.errorMessage =
         'We could not verify your session. Please sign in again.';
@@ -51,7 +56,7 @@ export class LoginComponent {
             if (response.loggedIn && response.user?.id) {
               this.cartService.setUser(response.user.id);
               this.authService.setLoggedIn();
-              this.router.navigate(['/dashboard']);
+              this.router.navigateByUrl(this.returnUrl);
             } else {
               this.errorMessage = 'Could not load your account.';
             }

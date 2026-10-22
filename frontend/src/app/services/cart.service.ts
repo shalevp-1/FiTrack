@@ -87,6 +87,31 @@ export class CartService {
       return;
     }
 
+    if (userId !== null) {
+      const guestItems = this.loadCart(this.guestStorageKey);
+      const accountKey = `${this.storagePrefix}${userId}`;
+      const accountItems = this.loadCart(accountKey);
+
+      if (guestItems.length > 0) {
+        // Preserve both carts by combining quantities for matching products.
+        // The order API remains authoritative about current stock.
+        const merged = new Map<number, CartItem>();
+        for (const item of [...accountItems, ...guestItems]) {
+          const existing = merged.get(item.product.id);
+          merged.set(item.product.id, existing
+            ? { product: item.product, quantity: existing.quantity + item.quantity }
+            : { ...item });
+        }
+        const mergedItems = [...merged.values()];
+        localStorage.setItem(accountKey, JSON.stringify(mergedItems));
+        // Clear guest only after the combined cart has been persisted.
+        localStorage.setItem(this.guestStorageKey, JSON.stringify([]));
+        this.currentUserId = userId;
+        this.itemsSubject.next(mergedItems);
+        return;
+      }
+    }
+
     this.currentUserId = userId;
     this.itemsSubject.next(this.loadCart(this.getStorageKey()));
   }

@@ -49,6 +49,37 @@ app.use(cors({
     credentials: true
 }));
 
+// Key limits by login identifier because this deployment does not expose a
+// verified end-user IP to Express. Do not trust forwarded headers here.
+const authAttemptWindows = new Map();
+function limitAuthAttempts({ scope, windowMs, max, identifier }) {
+    return (req, res, next) => {
+        const value = identifier(req);
+        if (typeof value !== 'string' || !value.trim()) return next();
+        const key = `${scope}:${value.trim().toLowerCase()}`;
+        const now = Date.now();
+        let attempt = authAttemptWindows.get(key);
+        if (!attempt || now >= attempt.resetAt) attempt = { count: 0, resetAt: now + windowMs };
+        if (attempt.count >= max) {
+            res.set('Retry-After', String(Math.ceil((attempt.resetAt - now) / 1000)));
+            return res.status(429).json({ message: 'Too many attempts. Please try again later.' });
+        }
+        attempt.count += 1;
+        authAttemptWindows.set(key, attempt);
+        if (authAttemptWindows.size > 10000) {
+            for (const [attemptKey, entry] of authAttemptWindows) {
+                if (now >= entry.resetAt) authAttemptWindows.delete(attemptKey);
+            }
+            while (authAttemptWindows.size > 10000) {
+                authAttemptWindows.delete(authAttemptWindows.keys().next().value);
+            }
+        }
+        next();
+    };
+}
+const loginRateLimit = limitAuthAttempts({ scope: 'login', windowMs: 15 * 60 * 1000, max: 10, identifier: req => req.body?.login });
+const registrationRateLimit = limitAuthAttempts({ scope: 'registration', windowMs: 60 * 60 * 1000, max: 5, identifier: req => req.body?.email });
+
 app.get('/api/health', async (req, res) => {
     try {
         await db.query('SELECT 1');
@@ -727,7 +758,7 @@ function normalizeRunningDetails(running) {
 }
 
 // REGISTER
-app.post('/api/users', async (req, res) => {
+app.post('/api/users', registrationRateLimit, async (req, res) => {
     try {
         const { username, email, password } = req.body || {};
 
@@ -760,12 +791,12 @@ app.post('/api/users', async (req, res) => {
         }
 
         if (
-            password.length < 3 ||
+            Array.from(password).length < 8 ||
             password.length > 128 ||
             Buffer.byteLength(password, 'utf8') > 72
         ) {
             return res.status(400).json({
-                message: 'Password must be 3–128 characters'
+                message: 'Password must be between 8 and 72 characters long.'
             });
         }
 
@@ -798,7 +829,7 @@ app.post('/api/users', async (req, res) => {
 });
 
 // LOGIN
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', loginRateLimit, async (req, res) => {
     try {
         const { login, password } = req.body || {};
 
@@ -818,10 +849,13 @@ app.post('/api/login', async (req, res) => {
             [login.trim(), login.trim()]
         );
 
-        if (users.length === 0) {
-            return res.status(404).json({
-                message: 'User not found'
-            });
+        const invalidCredentials = () => res.status(401).json({
+            message: 'Invalid username/email or password.'
+        });
+        // bcrypt only considers the first 72 UTF-8 bytes; never silently accept
+        // a longer input as the same password prefix.
+        if (Buffer.byteLength(password, 'utf8') > 72 || users.length === 0) {
+            return invalidCredentials();
         }
 
         const user = users[0];
@@ -832,9 +866,7 @@ app.post('/api/login', async (req, res) => {
         );
 
         if (!passwordMatch) {
-            return res.status(401).json({
-                message: 'Incorrect password'
-            });
+            return invalidCredentials();
         }
 
         const token = jwt.sign(
