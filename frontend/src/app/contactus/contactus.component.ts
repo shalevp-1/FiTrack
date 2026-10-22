@@ -15,17 +15,4 @@ export class ContactusComponent {
     message: ''
   };
 
-  sendMessage(): void {
-    console.log('Contact form submitted:', this.contact);
-
-    alert('Thanks for contacting Fitrack! Your message has been received.');
-
-    this.contact = {
-      name: '',
-      email: '',
-      subject: '',
-      message: ''
-    };
-  }
-
 }

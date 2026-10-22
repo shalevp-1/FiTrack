@@ -85,9 +85,23 @@ The relational data model covers users, workouts, running details, strength exer
 ### Prerequisites
 
 - Node.js 20 or later
-- A MySQL database initialized with the FiTrack tables
+- MySQL 8.0 or later, with the `mysql` command-line client available
 
-### 1. Configure and start the API
+### 1. Create and initialize a local database
+
+**Important:** use a brand-new, disposable local database. Do not run these commands against an existing database or production. `schema.sql` creates tables and is intended to run once in the new database; the demo seed is safe to rerun there.
+
+From the repository root, create a new local database and load the schema:
+
+```powershell
+mysql -u root -p -e "CREATE DATABASE fitrack CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+cmd /c "mysql -u root -p fitrack < backend\sql\schema.sql"
+cmd /c "mysql -u root -p fitrack < backend\sql\demo-seed.sql"
+```
+
+The schema includes all tables used by the current API. The seed contains disposable local demo users, workouts, exercise types, exercise catalog entries, and products. These local seed accounts are separate from the live demo accounts listed at the top of this README. Local demo login credentials are `demo` / `DemoUser2026!` and `admin` / `AdminDemo2026!`. If the seed encounters a conflicting existing username or email, it does not attach sample workouts to a different user. Re-running the seed preserves existing rows and does not reset changed local passwords; create a fresh local database to restore the documented demo credentials.
+
+### 2. Configure and start the API
 
 From the repository root:
 
@@ -96,7 +110,7 @@ cd backend
 npm install
 ```
 
-Create `backend/.env` with the database connection details and a strong JWT secret:
+Create `backend/.env` with local database connection details and a new random JWT secret (at least 32 bytes):
 
 ```dotenv
 PORT=3000
@@ -106,8 +120,8 @@ CLIENT_ORIGINS=http://localhost:4200
 
 DB_HOST=localhost
 DB_PORT=3306
-DB_USER=your_mysql_user
-DB_PASSWORD=your_mysql_password
+DB_USER=root
+DB_PASSWORD=your_local_mysql_password
 DB_NAME=fitrack
 ```
 
@@ -117,9 +131,9 @@ Start the API:
 npm start
 ```
 
-The backend requires `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`. `JWT_SECRET` must contain at least 32 bytes. In production, configure `DB_SSL_CA` for the database TLS certificate as well. Keep `.env` files and real credentials out of source control.
+The backend requires `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`; `DB_PORT` defaults to `3306`. `JWT_SECRET` must contain at least 32 bytes. `CLIENT_ORIGINS` is a comma-separated list of allowed browser origins. Local mode does not use database TLS. Production must set `NODE_ENV=production`, use separate production DB credentials and a unique JWT secret, and provide `DB_SSL_CA` with the database TLS certificate. `PORT` is optional and defaults to `3000`. Keep `.env` files and real credentials out of source control; configure production values in the hosting provider.
 
-### 2. Start the Angular frontend
+### 3. Start the Angular frontend
 
 In a second terminal, from the repository root:
 
@@ -146,8 +160,28 @@ The frontend is configured for Netlify using the repository’s `netlify.toml`; 
 
 ## Security notes
 
+- New registrations require at least 8 characters and no more than 72 UTF-8 bytes. Existing shorter passwords remain usable for login. Login passwords over bcrypt's 72-byte input limit are rejected rather than silently truncated.
+- Login attempts are limited to 10 per 15 minutes per normalized login identifier; registration is limited to 5 per hour per email. These in-memory limits reset when the backend restarts and are not shared between multiple backend instances. The current Netlify function forwards request headers to Render, so the API does not trust forwarded client-IP headers. Production deployments needing IP-based limits should pass a verified client IP through a trusted proxy contract or apply limits at the edge; do not enable Express proxy trust without verifying every hop.
 - Passwords are hashed with bcrypt.
 - Authentication tokens are issued in HTTP-only cookies.
 - Administrator API routes enforce authentication and the admin role on the backend.
 - SQL queries use parameterized values for user-provided data.
 - JWT, database, and production TLS configuration must be supplied through environment variables.
+
+## What I Learned
+
+- Designing relational data models for workouts, exercises, orders, and inventory.
+- Building an Angular frontend backed by a Node.js and Express REST API.
+- Implementing cookie-based authentication and server-side role-based authorization.
+- Keeping order totals and inventory updates consistent through server-side validation and database transactions.
+- Debugging application issues, tracing errors across frontend and backend code, and troubleshooting API and database interactions.
+- Testing features, investigating unexpected behavior, and validating fixes to prevent regressions.
+- Configuring and deploying the frontend, API, and database as separate services.
+
+## Limitations and Future Improvements
+
+- Add automated backend API and integration tests.
+- Upgrade Angular to a currently supported version.
+- Improve authentication abuse protection beyond per-instance, in-memory rate limits.
+- Further test and refine checkout and cart behavior, including stock changes between adding items and placing an order.
+- Keep checkout in demo mode; the application does not process real payments or handle shipping.
