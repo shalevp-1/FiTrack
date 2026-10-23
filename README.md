@@ -1,97 +1,101 @@
 # FiTrack
 
-**A full-stack fitness tracking and product management application**
+A full-stack fitness tracking and product management application built with Angular, Node.js, Express, and MySQL.
 
-FiTrack helps users record running and strength workouts, review their training history, and follow their progress through a visual dashboard. It also includes a product catalog, checkout and order history, and an administrator inventory workflow.
+FiTrack lets users track running and strength workouts, monitor training progress, shop for products, and manage orders. It also includes role-protected administration tools for product management and inventory restocking.
 
-[Open the live application](https://fitrackfitness.netlify.app/home) · [View the source on GitHub](https://github.com/shalevp-1/FiTrack)
-
+**[Live Demo](https://fitrackfitness.netlify.app/home)** 
 
 ## Demo Access
 
-Explore FiTrack using the live application and demo accounts below.
+Use the live application to explore FiTrack with the following demo accounts.
 
-**Live application:** [Open FiTrack](https://fitrackfitness.netlify.app/home)
+| Account | Username | Password |
+|---|---|---|
+| Regular user | `demo` | `demo` |
+| Administrator | `admin` | `admin` |
 
-### Regular User
+The regular account provides access to workout tracking, the dashboard, products, checkout, and order history. The administrator account also provides access to product management and inventory workflows.
 
-- **Username:** `demo`
-- **Password:** `demo`
+These are public demo credentials for evaluation purposes only. The accounts use demo data; do not store real or sensitive information in them.
 
-Explore the dashboard, running and strength workouts, workout history, product catalog, checkout, and order history using sample data.
+## Product Tour
 
-### Admin
+### Fitness Dashboard
 
-- **Username:** `admin`
-- **Password:** `admin`
-
-Explore product management, inventory tracking, and restocking workflows.
-
-Both accounts use demo data and are intended for evaluation purposes only.
-
-
-## Product tour
-
-### Fitness dashboard
-
-Workout summaries and visualizations give users an overview of their training activity.
+View workout summaries, activity charts, monthly running distance, and a workout calendar.
 
 ![FiTrack dashboard demo](docs/Dashboard.gif)
 
-### Workout tracking
+### Workout Tracking
 
-- **Workout tracking:** Create, view, edit, and delete running and strength workouts, including workout-specific metrics and exercise sets.
-- **Workout history and calendar:** Review workout details on the dashboard and explore training sessions in a dedicated calendar.
+Create, view, edit, and delete running and strength workouts, with activity-specific metrics and exercise sets.
 
 ![FiTrack workout tracking demo](docs/Workouts.gif)
 
-### Admin inventory
+### Admin Inventory Management
 
-Administrators can add, update, and delete products, manage inventory levels, and restock existing products without creating duplicates.
+Administrators can manage product details, monitor stock levels, and restock existing products without creating duplicate entries.
 
-![FiTrack inventory restocking demo](<docs/Admin restock.gif>)
+![FiTrack inventory restocking demo](docs/Admin%20restock.gif)
 
 ## Features
 
-- **Authentication and authorization:** Account registration and login, authenticated routes, and role-protected administrator operations.
-- **Workout tracking:** Create, review, edit, and delete running and strength workouts.
-- **Progress dashboard:** Review workout activity and fitness summaries.
-- **Product catalog and checkout:** Browse products, manage a cart, place orders, and view order history.
-- **Inventory administration:** Search and filter products by stock status, add or edit product details, restock products, and deactivate products.
-- **Low-stock visibility:** Inventory warnings use a five-unit threshold.
+- **Authentication and authorization:** Registration, login, HTTP-only cookie authentication, and role-protected administrative operations.
+- **Running workouts:** Record distance, pace, heart rate, and elevation.
+- **Strength workouts:** Track exercises and sets.
+- **Progress dashboard:** Review training activity, monthly running distance, and workout history.
+- **Product catalog and checkout:** Browse products, manage a cart, place orders, and review order history.
+- **Inventory administration:** Add, edit, deactivate, and manage products, including restocking existing inventory.
+- **Low-stock warnings:** Identify products with fewer than five units in stock.
 
-## Technology
+## Technology Stack
 
 | Area | Technologies |
 |---|---|
 | Frontend | Angular, TypeScript, RxJS, HTML, CSS |
 | Backend | Node.js, Express |
-| Database | MySQL with `mysql2` |
-| Authentication | JWT in an HTTP-only cookie; bcrypt password hashing |
-| Hosting | Netlify (frontend), Render (API), Aiven (MySQL) |
+| Database | MySQL, `mysql2` |
+| Authentication | JWT in HTTP-only cookies, bcrypt |
+| Frontend hosting | Netlify |
+| API hosting | Render |
+| Database hosting | Aiven |
 
 ## Architecture
 
-The frontend communicates with the Express REST API over HTTP. The API handles authentication, authorization, validation, application logic, and SQL operations against MySQL.
+The Angular frontend communicates with the Express REST API. The backend handles authentication, authorization, request validation, application logic, and database operations.
 
 ![FiTrack application architecture](docs/Architecture.drawio.png)
 
-The relational data model covers users, workouts, running details, strength exercises and sets, products, and orders.
+The relational database models users, workouts, running details, strength exercises and sets, products, and orders.
 
 ![FiTrack database relationship diagram](docs/DatabaseERD.png)
 
-## Run locally
+## Technical Highlights
+
+- **Secure authentication:** Password hashing with bcrypt and JWT-based authentication using HTTP-only cookies.
+- **Server-side authorization:** Administrative operations enforce role checks on the backend.
+- **Parameterized SQL:** User-provided values are passed as query parameters.
+- **Transactional checkout:** Order creation and inventory updates use database transactions to maintain consistency.
+- **Inventory integrity:** Stock availability is checked during checkout, and order items preserve purchase-price information.
+- **Full-stack deployment:** Frontend, API, and database run as separate services.
+
+## Technical Details
+
+<details>
+<summary><strong>Run locally</strong></summary>
 
 ### Prerequisites
 
 - Node.js 20 or later
-- MySQL 8.0 or later, with the `mysql` command-line client available
+- MySQL 8.0 or later
+- The MySQL command-line client
 
 ### 1. Create and initialize a local database
 
-**Important:** use a brand-new, disposable local database. Do not run these commands against an existing database or production. `schema.sql` creates tables and is intended to run once in the new database; the demo seed is safe to rerun there.
+**Important:** Use a new, disposable local database. The schema creates tables and is intended to run once in that database. Never run these commands against production or an existing database containing data you need.
 
-From the repository root, create a new local database and load the schema:
+From the repository root, create the database and load the schema and demo seed:
 
 ```powershell
 mysql -u root -p -e "CREATE DATABASE fitrack CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
@@ -99,7 +103,14 @@ cmd /c "mysql -u root -p fitrack < backend\sql\schema.sql"
 cmd /c "mysql -u root -p fitrack < backend\sql\demo-seed.sql"
 ```
 
-The schema includes all tables used by the current API. The seed contains disposable local demo users, workouts, exercise types, exercise catalog entries, and products. These local seed accounts are separate from the live demo accounts listed at the top of this README. Local demo login credentials are `demo` / `DemoUser2026!` and `admin` / `AdminDemo2026!`. If the seed encounters a conflicting existing username or email, it does not attach sample workouts to a different user. Re-running the seed preserves existing rows and does not reset changed local passwords; create a fresh local database to restore the documented demo credentials.
+The seed provides local demo users, workouts, exercise types, exercise catalog entries, and products. These accounts are separate from the live demo accounts listed above.
+
+Local demo credentials:
+
+- Regular user: `demo` / `DemoUser2026!`
+- Administrator: `admin` / `AdminDemo2026!`
+
+If a seeded username or email conflicts with an existing record, the seed does not attach sample workouts to a different user. Re-running the seed preserves existing rows and does not reset changed local passwords. To restore the documented credentials, initialize a fresh local database.
 
 ### 2. Configure and start the API
 
@@ -110,7 +121,7 @@ cd backend
 npm install
 ```
 
-Create `backend/.env` with local database connection details and a new random JWT secret (at least 32 bytes):
+Create `backend/.env` with your local configuration:
 
 ```dotenv
 PORT=3000
@@ -125,17 +136,19 @@ DB_PASSWORD=your_local_mysql_password
 DB_NAME=fitrack
 ```
 
+Generate a unique random JWT secret of at least 32 bytes. Replace the example database password with your own local MySQL password.
+
 Start the API:
 
 ```powershell
 npm start
 ```
 
-The backend requires `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`; `DB_PORT` defaults to `3306`. `JWT_SECRET` must contain at least 32 bytes. `CLIENT_ORIGINS` is a comma-separated list of allowed browser origins. Local mode does not use database TLS. Production must set `NODE_ENV=production`, use separate production DB credentials and a unique JWT secret, and provide `DB_SSL_CA` with the database TLS certificate. `PORT` is optional and defaults to `3000`. Keep `.env` files and real credentials out of source control; configure production values in the hosting provider.
+The backend requires `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`. `DB_PORT` defaults to `3306`, and `PORT` defaults to `3000`. `CLIENT_ORIGINS` accepts a comma-separated list of allowed browser origins.
 
 ### 3. Start the Angular frontend
 
-In a second terminal, from the repository root:
+Open a second terminal from the repository root:
 
 ```powershell
 cd frontend
@@ -145,43 +158,68 @@ npm start
 
 The Angular development server runs at `http://localhost:4200` and proxies `/api` requests to the local backend at `http://localhost:3000`.
 
-### Build and frontend tests
+### 4. Build and test the frontend
 
-Run these commands from `frontend`:
+Run these commands from the `frontend` directory:
 
 ```powershell
 npm run build
 npx ng test --watch=false
 ```
 
-## Deployment
+</details>
 
-The frontend is configured for Netlify using the repository’s `netlify.toml`; the backend runs as a separate Express service, and MySQL is hosted separately. Configure production secrets and database settings in the hosting providers’ environment-variable settings rather than committing them.
+<details>
+<summary><strong>Deployment and environment configuration</strong></summary>
 
-## Security notes
+The frontend is deployed to Netlify using the repository's `netlify.toml`. The Express API runs as a separate Render service, and MySQL is hosted on Aiven.
 
-- New registrations require at least 8 characters and no more than 72 UTF-8 bytes. Existing shorter passwords remain usable for login. Login passwords over bcrypt's 72-byte input limit are rejected rather than silently truncated.
-- Login attempts are limited to 10 per 15 minutes per normalized login identifier; registration is limited to 5 per hour per email. These in-memory limits reset when the backend restarts and are not shared between multiple backend instances. The current Netlify function forwards request headers to Render, so the API does not trust forwarded client-IP headers. Production deployments needing IP-based limits should pass a verified client IP through a trusted proxy contract or apply limits at the edge; do not enable Express proxy trust without verifying every hop.
+Configure production secrets and database settings through the hosting providers' environment-variable settings. Do not commit `.env` files or real credentials.
+
+Production deployments should use:
+
+- `NODE_ENV=production`
+- A unique JWT secret
+- Separate production database credentials
+- `DB_SSL_CA` containing the database TLS certificate
+
+Local development does not use database TLS. Production database connections should use the configured TLS settings.
+
+</details>
+
+<details>
+<summary><strong>Security considerations</strong></summary>
+
+- New registrations require passwords of at least 8 characters and no more than 72 UTF-8 bytes. Existing shorter passwords remain usable for login.
+- Login passwords exceeding bcrypt's 72-byte input limit are rejected rather than silently truncated.
+- Login attempts are limited to 10 per 15 minutes per normalized login identifier. Registration is limited to 5 attempts per hour per email.
+- These rate limits are in-memory, reset when the backend restarts, and are not shared across multiple backend instances.
+- The API does not trust forwarded client-IP headers. Deployments requiring IP-based rate limiting should use a verified trusted-proxy configuration or enforce limits at the edge.
 - Passwords are hashed with bcrypt.
 - Authentication tokens are issued in HTTP-only cookies.
-- Administrator API routes enforce authentication and the admin role on the backend.
+- Administrative API routes enforce authentication and role authorization on the backend.
 - SQL queries use parameterized values for user-provided data.
-- JWT, database, and production TLS configuration must be supplied through environment variables.
+- Database credentials, JWT secrets, and production TLS configuration are supplied through environment variables.
+
+</details>
 
 ## What I Learned
 
-- Designing relational data models for workouts, exercises, orders, and inventory.
+- Designing relational database schemas for workouts, exercises, orders, and inventory.
 - Building an Angular frontend backed by a Node.js and Express REST API.
 - Implementing cookie-based authentication and server-side role-based authorization.
-- Keeping order totals and inventory updates consistent through server-side validation and database transactions.
-- Debugging application issues, tracing errors across frontend and backend code, and troubleshooting API and database interactions.
-- Testing features, investigating unexpected behavior, and validating fixes to prevent regressions.
-- Configuring and deploying the frontend, API, and database as separate services.
+- Maintaining order and inventory consistency through validation and database transactions.
+- Debugging issues across frontend, API, and database layers.
+- Testing application behavior, investigating unexpected issues, and validating fixes.
+- Deploying a frontend, API, and database as separate services.
 
-## Limitations and Future Improvements
+## Future Improvements
 
-- Add automated backend API and integration tests.
-- Upgrade Angular to a currently supported version.
-- Improve authentication abuse protection beyond per-instance, in-memory rate limits.
-- Further test and refine checkout and cart behavior, including stock changes between adding items and placing an order.
-- Keep checkout in demo mode; the application does not process real payments or handle shipping.
+- Add meaningful backend API and integration tests for checkout, inventory management, cart merging, and transaction rollback.
+- Refactor the backend into smaller route, controller, and service modules.
+- Optimize workout data retrieval to reduce unnecessary API requests.
+- Improve frontend maintainability by splitting large components and simplifying asynchronous data flows.
+- Verify authentication behavior after user-role or account-status changes, and strengthen abuse protection for multi-instance deployments.
+- Add automated test execution to CI and upgrade Angular to a currently supported version.
+
+**Note:** FiTrack is a demonstration project. Checkout does not process real payments or handle shipping.
