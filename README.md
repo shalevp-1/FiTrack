@@ -205,21 +205,29 @@ Local development does not use database TLS. Production database connections sho
 
 ## What I Learned
 
-- Designing relational database schemas for workouts, exercises, orders, and inventory.
-- Building an Angular frontend backed by a Node.js and Express REST API.
-- Implementing cookie-based authentication and server-side role-based authorization.
-- Maintaining order and inventory consistency through validation and database transactions.
-- Debugging issues across frontend, API, and database layers.
-- Testing application behavior, investigating unexpected issues, and validating fixes.
-- Deploying a frontend, API, and database as separate services.
+- **Relational schema design:** Modeled workouts, orders, and inventory in MySQL, with relationships and constraints that keep the data consistent.
+- **Full-stack development:** Built an end-to-end application with Angular, Node.js, Express, and MySQL.
+- **Authentication and authorization:** Implemented cookie-based authentication with server-side role-based access control, so permissions are enforced on the backend and not only in the UI.
+- **Data integrity:** Used input validation and database transactions so operations like checkout and inventory updates either complete fully or roll back safely.
+- **Cross-layer debugging:** Traced and fixed issues across the frontend, API, and database, then verified each fix by testing the affected flows.
+- **Deployment:** Deployed and configured the frontend, backend API, and database as separate services.
 
 ## Future Improvements
 
-- Add meaningful backend API and integration tests for checkout, inventory management, cart merging, and transaction rollback.
+**Testing and CI**
+- Add backend API and integration tests covering checkout, inventory management, cart merging, and transaction rollback.
+- Run the tests automatically in CI.
+
+**Backend architecture**
 - Refactor the backend into smaller route, controller, and service modules.
-- Optimize workout data retrieval to reduce unnecessary API requests.
-- Improve frontend maintainability by splitting large components and simplifying asynchronous data flows.
-- Verify authentication behavior after user-role or account-status changes, and strengthen abuse protection for multi-instance deployments.
-- Add automated test execution to CI and upgrade Angular to a currently supported version.
+
+**Security**
+- Re-validate sessions after role or account-status changes.
+- Replace in-memory rate limiting with distributed rate limiting for multi-instance deployments.
+
+**Frontend and performance**
+- Optimize workout data retrieval to reduce redundant API requests.
+- Break down large components and simplify asynchronous data flows.
+- Upgrade Angular to a currently supported version.
 
 **Note:** FiTrack is a demonstration project. Checkout does not process real payments or handle shipping.
