@@ -976,6 +976,10 @@
     gap: 7px;
   }
 
+  .monthly-chart {
+    min-width: 0;
+  }
+
   .breakdown-heading {
     width: calc(100% - 40px);
     margin: 60px auto 25px;
